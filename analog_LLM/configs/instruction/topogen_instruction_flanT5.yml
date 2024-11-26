@@ -1,0 +1,58 @@
+
+# text_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/node2topo"
+# target_data: "dataset_5_valid_set_with_input_clip0.5_fix_input_flanT5.json"
+# tokenized_data_dir: '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/node2topo/tokenized_flanT5'
+# tokenized_data: "dataset_5_valid_set_with_input_clip0.5_fix_input.pickle"
+# tokenized_data: "dataset_all_345_regenerate_prune_isomophic.pickle"
+
+# 2024/01/03
+text_data_dir: '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/dataset20220523'
+target_data: 'dataset_all_345_regenerate_prune_isomophic.json'
+tokenized_data_dir: '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/node2topo/tokenized_flanT5'
+tokenized_data_trn: "dataset_all_345_regenerate_prune_isomophic_new_trn.pickle"
+tokenized_data_val: "dataset_all_345_regenerate_prune_isomophic_new_val.pickle"
+
+task: 'conditionalGen'
+order: 'duty vertex edge'
+llm: 'flan-t5'
+mask_style: 'T5'
+load_pretrained: True
+finetune_method: 'pure'
+warmup_steps: 300
+val_custom: False
+data_augment: False
+LLM_device: 0
+
+base_model: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/flan-t5-base"
+# output_dir: "/skunk-pod-storage-chenchia-2echang-40ibm-2ecom-pvc/analog_LLM_model/v1-torchrun-nproc2-data5-10k-instruction"
+# running in ssh -p 2502 skunk@50.22.159.227
+output_dir: "/sharedchangskdir/LLM_models/analog_LLM_model_flanT5/v1-topogen-data5-all-instruction/"
+val_set_size: 0.1
+
+prompt_template_name: "alpaca"
+generate: False
+
+# num_epochs: 10
+num_epochs: 5
+lr: 3.0e-4
+batch_size: 128
+micro_batch_size: 8
+cutoff_len: 512
+train_on_inputs: True  # if False, masks out inputs in loss
+add_eos_token: False
+fp16: False
+group_by_length: True
+encoder_model_dir: Null
+eval_steps: 200
+
+
+lora_target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+lora_r: 16
+lora_alpha: 16
+lora_dropout: 0.05
+
+
+wandb_run_name: v1-flanT5-topogen-data5-all-instruction
+resume_from_checkpoint: Null
+use_wandb: True
+wandb_project: Analog_LLM

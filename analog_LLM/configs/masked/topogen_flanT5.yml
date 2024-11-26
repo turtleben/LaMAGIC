@@ -1,0 +1,64 @@
+
+# text_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked"
+# target_data: "dataset_5_valid_set_regenerate_prune_isomophic.json"
+text_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked"
+target_data: "dataset_all_345_regenerate_prune_isomophic_new.json"
+LUT_cir_data_name: "dataset_all_345_regenerate_prune_isomophic_new_LUT_for_eval.json"
+tokenized_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked/tokenized"
+tokenized_data_trn: "dataset_all_345_regenerate_prune_isomophic_new_trn.pickle"
+tokenized_data_val: "dataset_all_345_regenerate_prune_isomophic_new_val.pickle"
+
+order: 'duty vertex edge'
+# not used now for masked modeling
+
+task: 'maskedGen'
+mask_style: 'T5'
+llm: 'flan-t5'
+load_pretrained: True
+finetune_method: 'pure'
+masked_method: 'random'
+masked_ratio: 0.5
+warmup_steps: 300
+val_custom: False
+data_augment: False
+
+base_model: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/flan-t5-base"
+# output_dir: "/skunk-pod-storage-chenchia-2echang-40ibm-2ecom-pvc/analog_LLM_model/v1-torchrun-nproc2-data5-10k-instruction"
+# running in ssh -p 2502 skunk@50.22.159.227
+output_dir: "/"
+val_set_size: 0.1
+
+prompt_template_name: "alpaca"
+generate: False
+
+# num_epochs: 10
+num_epochs: 5
+reg: 0.0
+lr: 3.0e-4
+batch_size: 128
+micro_batch_size: 8
+cutoff_len: 512
+train_on_inputs: True  # if False, masks out inputs in loss
+add_eos_token: False
+group_by_length: True
+fp16: False
+prune_invalid: True
+normalize: False
+encoder_model_dir: Null
+duty10: False
+
+
+lora_target_modules: ["q_proj", "k_proj", "v_proj", "o_proj"]
+lora_r: 16
+lora_alpha: 16
+lora_dropout: 0.05
+eval_steps: 200
+dropout_rate: 0.1
+num_labels: 1
+
+
+
+wandb_run_name: flanT5-maskedgen-data345
+resume_from_checkpoint: Null
+use_wandb: True
+wandb_project: Analog_LLM

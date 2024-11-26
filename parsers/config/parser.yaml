@@ -1,0 +1,6 @@
+# TODO: Update the path to the raw data and target data based on your own data path
+base_data_dir: '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/dataset20220523/regenerate_all_component345'
+raw_data: "dataset_all_345_regenerate_prune_isomophic.json"
+
+text_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/dataset20220523"
+target_data: "dataset_5_valid_set_regenerate.json"
