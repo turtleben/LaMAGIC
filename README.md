@@ -9,4 +9,7 @@ Run the following command to create the environment:
    ```bash
    conda env create -f environment.yml
 ```
+
+After cloning, use git lfs pull to clone all large dataset files.
+
 ## Framework

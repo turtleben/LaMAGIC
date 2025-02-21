@@ -483,24 +483,19 @@ def parse_json_data_convert_raw_2_matrix(data_path, output_path):
         json.dump(matrix_data, f)
 
 if __name__ == '__main__':
-    # the config path
-    config_path = 'parsers/config/parser.yaml'
-    config = load_and_apply_yaml_config(config_path)
-    os.makedirs(config.text_data_dir, exist_ok=True)
-    
     # the raw data path
-    data_path = os.path.join(config.base_data_dir, config.raw_data)
-    # the output path for the text data after transformation
-    output_path = os.path.join(config.text_data_dir, config.target_data)
+    data_path = "dataset/raw/dataset_all_345_regenerate_prune_isomophic.json"
 
     """
     Use 1. parse_transform_raw_2_naive(data_path, output_path) for Naive formulation for edge generation task
     Use 2. parse_transform_raw_2_naive_form_topology(data_path, output_path) for Naive formulation for topology generation task
     Use 3. parse_json_data_shrink_canonical(data_path, output_path) for Canonical formulation
     Use 4. parse_json_data_shrink_canonical_dutycycle(data_path, output_path) for Canonical formulation + duty cycle one-hot encoding
+    Use 5. parse_json_data_convert_raw_2_matrix(data_path, output_path) for two adjacency matrix formulations FM and PM
 
     Example: for Naive formulation for topology generation task
     """
+    # the output path for the text data after transformation
     output_path = os.path.join('/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/dataset20220523', 'dataset_all_345_regenerate_prune_isomophic_topology.json')
     parse_transform_raw_2_naive_form_topology(data_path=data_path, output_path=output_path)
     exit()

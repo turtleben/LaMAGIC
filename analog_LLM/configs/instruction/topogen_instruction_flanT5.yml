@@ -1,10 +1,4 @@
 
-# text_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/node2topo"
-# target_data: "dataset_5_valid_set_with_input_clip0.5_fix_input_flanT5.json"
-# tokenized_data_dir: '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/node2topo/tokenized_flanT5'
-# tokenized_data: "dataset_5_valid_set_with_input_clip0.5_fix_input.pickle"
-# tokenized_data: "dataset_all_345_regenerate_prune_isomophic.pickle"
-
 # 2024/01/03
 text_data_dir: '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/dataset20220523'
 target_data: 'dataset_all_345_regenerate_prune_isomophic.json'
