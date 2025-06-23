@@ -22,7 +22,6 @@ from util import *
 # sys.path.append(os.path.join(sys.path[0], '../topo_data_util/'))
 # from train import main as train_fn
 from topo_data_util.topo_analysis.topoGraph import TopoGraph
-from GetReward import calculate_reward
 from topo_data_util.topo_utils.plot import plot_hist
 from utils.yaml_parser import load_and_apply_yaml_config
 from parsers.simulation import sim_generation_output
@@ -579,7 +578,7 @@ if __name__ == '__main__':
 
     data_paths = [data_path]
 
-    '''For 3-component circuit'''
+    '''For 3,4,5-component circuit'''
 
     '''For SCFI'''
     # output_path = os.path.join(output_dir, 'dataset_345_shrink_canonical_typeNidx_dutycycle_first.json')
@@ -588,7 +587,7 @@ if __name__ == '__main__':
     #                 use_log=args.use_log,
     #                 target_vout=args.target_vout, typeNidx=True)
     
-    '''For SCFI with output no component type'''
+    '''For SCFI with output no component type (SFCI-NCT)'''
     # output_path = os.path.join(output_dir, 'dataset_345_shrink_canonical_typeNidx_output_no_type_dutycycle_first.json')
     # parse_json_data_shrink_canonical_dutycycle_first(data_paths=data_paths, output_path=output_path,
     #                 select_cond=args.select_cond, 
@@ -606,9 +605,7 @@ if __name__ == '__main__':
     # gen_volcabulary_matrix()
 
     '''For 6-component circuit'''
-
-    prefix = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/new_dataset/6_component_raw/regenerate_30000'
-    data_path = os.path.join(prefix, 'dataset_6_regenerate_30000_remove_isomophism.json')
+    data_path = os.path.join('dataset/raw/', 'dataset_6_regenerate_30000_remove_isomophism.json')
     data_paths = [data_path]
 
     '''For SCFI'''
@@ -619,7 +616,7 @@ if __name__ == '__main__':
     #                 target_vout=args.target_vout,
     #                 six_comp=True, typeNidx=True)
 
-    '''For SCFI with output no component type'''
+    '''For SCFI with output no component type (SFCI-NCT)'''
     # output_path = os.path.join(output_dir, 'dataset_6_regenerate_shrink_canonical_typeNidx_output_no_type.json')
     # parse_json_data_shrink_canonical_dutycycle_first(data_paths=data_paths, output_path=output_path,
     #                 select_cond=args.select_cond, 
@@ -629,73 +626,13 @@ if __name__ == '__main__':
     
     '''For SFM'''
     # output_path = os.path.join(output_dir, 'dataset_6_regenerate_matrix_dutycycle_first.json')
-    # output_path = os.path.join(output_dir, 'dataset_6_regenerate_matrix_half_dutycycle_first.json')
     # parse_json_data_matrix_dutycycle_first(data_paths=data_paths, output_path=output_path,
     #                 select_cond=args.select_cond, 
     #                 use_log=args.use_log,
     #                 target_vout=args.target_vout,
     #                 six_comp=True)
     
+    '''For SHFM'''
+    # output_path = os.path.join(output_dir, 'dataset_6_regenerate_matrix_half_dutycycle_first.json')
 
     exit()
-    
-    
-    
-    file_name = args.data.split('.')[0]
-
-    feed_random_seeds(args.seed)
-
-    if args.data is None:
-        raise Exception('args.data not provided.')
-    
-    # output_dir = 
-    
-    parse_json_data(data_path=args.data, output_dir=output_path, select_cond=args.select_cond, use_log=args.use_log,
-                                      target_vout=args.target_vout)
-
-    # if args.use_log:
-    #     wandb.init(project="surrogate_model",
-    #                name=file_name,
-    #                config=vars(args))
-    if not args.data_seed:
-        print('not using fixed dataset')
-        args.data_seed = args.seed
-    if not splitted_data_exist(data_path=args.data, training_ratio=args.train_ratio, seed=args.data_seed):
-        # add 3,4 good circuits
-        data = merge_extra_good_circuits(smaller_circuit_datasets=args.extra_datasets, _args=args,
-                                         good_circuit_threshold=args.circuit_threshold)
-        data = data + parse_json_data(data_path=args.data, select_cond=args.select_cond, use_log=args.use_log,
-                                      target_vout=args.target_vout)
-
-        data_train, data_dev, data_test = split_data(data=data,
-                                                     data_path=args.data,
-                                                     training_ratio=args.train_ratio,
-                                                     dev_ratio=args.dev_ratio,
-                                                     test_ratio=args.test_ratio,
-                                                     split_by=args.split_by,
-                                                     debug=args.debug,
-                                                     seed=args.seed)
-        data_train_file = f"{file_name}_train_{args.train_ratio}_{args.seed}.json"
-        data_dev_file = f"{file_name}_dev_{args.train_ratio}_{args.seed}.json"
-        data_test_file = f"{file_name}_test_{args.train_ratio}_{args.seed}.json"
-        exit(0)
-
-    else:
-        print('keep using existing splitted data')
-        data_train_file = f"{file_name}_train_{args.train_ratio}_{args.data_seed}.json"
-        data_dev_file = f"{file_name}_dev_{args.train_ratio}_{args.data_seed}.json"
-        data_test_file = f"{file_name}_test_{args.train_ratio}_{args.data_seed}.json"
-
-    # ret_info = train_fn(args=args, training_data=data_train_file, validation_data=data_dev_file,
-    #                     testing_data=data_test_file)
-    # train_rse, valid_rse, test_rse = ret_info[-3:]
-
-    # if args.use_log:
-    #     wandb.run.summary["final_train_rse"] = train_rse
-    #     wandb.run.summary["final_valid_rse"] = valid_rse
-    #     wandb.run.summary["final_test_rse"] = test_rse
-
-    # Plot simulation distribution
-    # data_train = json.load(open(f"{file_name}_train_{args.train_ratio}_{args.seed}.json"))
-    # distribution_plot(simulation=[dataum['reward'] for dataum in data_train],
-    #                   predictions=[], file_name=f"train_{args.train_ratio}_{args.seed}.jpg", rse=0.0)

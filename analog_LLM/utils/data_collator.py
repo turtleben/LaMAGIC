@@ -32,6 +32,7 @@ from transformers import (
     T5Config,
     is_tensorboard_available,
     set_seed,
+    T5Tokenizer,
 )
 # from transformers.models.t5.modeling_flax_t5 import shift_tokens_right
 
@@ -969,30 +970,41 @@ class DataCollatorForCondGen:
     duty_ten: bool = False
     use_duty_cycle_option_prefix: bool = True
     typeNidx: bool = False
+    output_no_type: bool = False
+    common_word: bool = False
+    matrix_half: bool = False
 
     def __call__(self, examples: List[Dict[str, np.ndarray]]) -> BatchEncoding:
         input_ids, labels, prefixes = tuple([instance[key] for instance in examples] for key in ("input_ids", "labels", "prefixes"))
 
         if self.data_augment:
             # print('before data augment')
-            # print(labels)
+            # # print(labels)
             # org_input_str = self.tokenizer.batch_decode(input_ids)
             # org_label_str = self.tokenizer.batch_decode(labels)
             # print('input_str', '\n', org_input_str, '\nlabel_str\n', org_label_str)
             if self.baseline_format == 'shrink_canonical':
                 if not self.typeNidx:
                     if not self.duty_ten:
-                        special_token_ids = set([self.tokenizer.bos_token_id, self.tokenizer.eos_token_id, self.tokenizer.pad_token_id, 8])
-                        edge_sep_token_id = 9
+                        if type(self.tokenizer) == T5Tokenizer:
+                            # print('T5Tokenizer')
+                            special_token_ids = set([self.tokenizer.bos_token_id, self.tokenizer.eos_token_id, self.tokenizer.pad_token_id, 32132])
+                            edge_sep_token_id = [3, 6]
+                        else:
+                            special_token_ids = set([self.tokenizer.bos_token_id, self.tokenizer.eos_token_id, self.tokenizer.pad_token_id, 8])
+                            edge_sep_token_id = [9]
                     else:
                         special_token_ids = set([self.tokenizer.bos_token_id, self.tokenizer.eos_token_id, self.tokenizer.pad_token_id, 3])
-                        edge_sep_token_id = 4
+                        edge_sep_token_id = [4]
                     np.random.seed(None)
                     input_ids_list = []
                     labels_list = []
                     for i in range(len(input_ids)): 
                         input_ids_i = input_ids[i].tolist()
                         labels_ids_i = labels[i].tolist()
+                        # print('before augment')
+                        # print('input_ids_i', input_ids_i)
+                        # print('labels_ids_i', labels_ids_i)
                         # The data format is here
                         # Input_ids: VIN VOUT GND Sa0 Sb0 Sb1 C0 L0 <sep> </s>
                         # Labels: <duty_0.9> <sep> VIN Sb0 , VOUT C0 , GND Sb1 , Sa0 L0 , Sa0 Sb1 , Sb0 C0 L0 <sep> </s>
@@ -1007,19 +1019,22 @@ class DataCollatorForCondGen:
 
                         # Apply permutation to input token IDs
                         permuted_node_token_ids = [node_token_ids[i] for i in permuted_indices]
-                        permuted_input_token_ids = permuted_node_token_ids+ [token_id for token_id in input_ids_i if token_id in special_token_ids]
+                        permuted_input_token_ids = permuted_node_token_ids + [token_id for token_id in input_ids_i if token_id in special_token_ids]
 
                         netlist_ids = labels_ids_i[2:-2]
                         edge_list = []
                         edge = []
                         for netlist_id in netlist_ids:
-                            if netlist_id == edge_sep_token_id:
+                            if netlist_id is edge_sep_token_id[0]:
                                 edge_list.append(edge)
                                 # print(edge_list)
                                 edge = []
+                            elif len(edge_sep_token_id) > 1 and netlist_id is edge_sep_token_id[1]:
+                                continue
                             else:
                                 edge.append(netlist_id)
                         edge_list.append(edge)
+                        # print(edge_list)
                         node_indices = {token_id: index for index, token_id in enumerate(permuted_node_token_ids)}
                         for j in range(len(edge_list)):
                             edge_list[j].sort(key=lambda val: node_indices[val])
@@ -1028,9 +1043,14 @@ class DataCollatorForCondGen:
                         for j, edge in enumerate(edge_list):
                             new_netlist_ids += edge
                             if j != len(edge_list) - 1:
-                                new_netlist_ids.append(edge_sep_token_id)
+                                new_netlist_ids.extend(edge_sep_token_id)
+                        # print('new_netlist_ids', new_netlist_ids)
                         input_ids_i = torch.tensor(permuted_input_token_ids)
                         labels_ids_i = torch.tensor(labels_ids_i[:2] + new_netlist_ids + labels_ids_i[-2:])
+                        # print('after augment')
+                        # print('input_ids_i', input_ids_i)
+                        # print('labels_ids_i', labels_ids_i)
+                        # input()
                         input_ids_list.append(input_ids_i)
                         labels_list.append(labels_ids_i)
                     input_ids = input_ids_list 
@@ -1045,9 +1065,14 @@ class DataCollatorForCondGen:
                     input_strs = self.tokenizer.batch_decode(input_ids)
                     label_strs = self.tokenizer.batch_decode(labels)
                     for i in range(len(input_strs)):
-                        input_str = input_strs[i].split(' ')[:-2]
+                        
                         # replace
-                        label_str = label_strs[i].replace(',', ' ,').split(' ')[:-2]
+                        if type(self.tokenizer) == T5Tokenizer:
+                            input_str = input_strs[i].split(' ')[:-2]
+                            label_str = label_strs[i].replace(',', ' ,').split(' ')[:-2]
+                        else:
+                            input_str = input_strs[i].split(' ')[:-1]
+                            label_str = label_strs[i].split(' ')[:-1]
                         # print('label_str', label_str)
                         # label_str = label_strs[i].split(' ')[:-2]
                         netlist_str = label_str[2:]
@@ -1055,11 +1080,14 @@ class DataCollatorForCondGen:
                         node_list = []
                         node_id_map = {}
                         id_node_map = {}
-                        idx = -3
+                        if self.output_no_type == False:
+                            idx = -3
+                        else:
+                            idx = 0
                         j = 0
                         while j < len(input_str):
                             node = input_str[j]
-                            if node == "VIN" or node == "VOUT" or node == "GND":
+                            if self.output_no_type == False and self.common_word == False and (node == "VIN" or node == "VOUT" or node == "GND") or self.common_word == True and (node == 'A' or node == 'B' or node == 'C'):
                                 node_list.append(idx)
                                 node_id_map[node] = idx
                                 id_node_map[idx] = node
@@ -1086,22 +1114,32 @@ class DataCollatorForCondGen:
                             if node == ',':
                                 edge_list.append(edge)
                                 edge = []
-                            elif node == "VIN" or node == "VOUT" or node == "GND":
+                            elif self.output_no_type == False and self.common_word == False and (node == "VIN" or node == "VOUT" or node == "GND") or self.common_word == True and (node == 'A' or node == 'B' or node == 'C'):
                                 edge.append(node)
                             else:
-                                if j == len(netlist_str) - 1:
-                                    break
-                                node = node + ' ' + netlist_str[j+1]
-                                edge.append(node)
-                                j += 1
+                                if self.output_no_type == False:
+                                    if j == len(netlist_str) - 1:
+                                        break
+                                    node = node + ' ' + netlist_str[j+1]
+                                    edge.append(node)
+                                    j += 1
+                                else:
+                                    node = id_node_map[int(node)]
+                                    edge.append(node)
                             j += 1
                         edge_list.append(edge)
+                        # print('edge_list', edge_list)
                         permuted_indices = np.random.permutation(len(node_list))
                         permuted_node_token = [node_list[i] for i in permuted_indices]
                         input_str = ''
+                        random_idx = np.random.permutation(np.arange(0, 13))[:len(node_list)]
                         node_indices = {}
                         for index, idx in enumerate(permuted_node_token):
-                            input_str += (id_node_map[idx] + ' ')
+                            if self.output_no_type == False:
+                                input_str += (id_node_map[idx] + ' ')
+                            else:
+                                node_str_list = id_node_map[idx].split(' ')
+                                input_str += (node_str_list[0] + ' ' + str(random_idx[int(node_str_list[1])]) + ' ')
                             node_indices[id_node_map[idx]] = index
                         input_str += ' <sep> '
                         for j in range(len(edge_list)):
@@ -1109,13 +1147,29 @@ class DataCollatorForCondGen:
                         edge_list.sort(key=lambda val: node_indices[val[0]])
                         new_netlist_str = ''
                         for j, edge in enumerate(edge_list):
-                            new_netlist_str += ' '.join(edge)
+                            if self.output_no_type == False:
+                                new_netlist_str += ' '.join(edge)
+                            else:
+                                new_netlist_str += ' '.join([ str(random_idx[int(node.split(' ')[1])]) for node in edge])
                             if j != len(edge_list) - 1:
                                 new_netlist_str += ' , '
                         label_str = ' '.join(duty_str) + ' ' + new_netlist_str + ' <sep> '
-                        # print('label_str', label_str)
+                        
+                        input_str = " ".join(input_str.split())
+                        label_str = " ".join(label_str.split())
+                        
+                        # print('### input_str', input_str, 'label_str', label_str)
                         input_ids_i = self.tokenizer.encode(input_str)
                         label_ids_i = self.tokenizer.encode(label_str)
+
+                        if type(self.tokenizer) != T5Tokenizer:
+                            # concatenate input and label because now we are using GPT2 for casual LM
+                            input_ids_i_temp = [tid for tid in input_ids_i if tid != 220]
+                            label_ids_i_temp = [tid for tid in label_ids_i if tid != 220]
+                            label_ids_i = [-100] * (len(input_ids_i_temp)+7) + label_ids_i_temp + [self.tokenizer.eos_token_id]
+                            input_ids_i = input_ids_i_temp + label_ids_i_temp + [self.tokenizer.eos_token_id]
+                            
+                        # print('input_ids_i', input_ids_i, '\nlabel_ids_i', label_ids_i)
                         input_ids_i = torch.tensor(input_ids_i)
                         label_ids_i = torch.tensor(label_ids_i)
                         input_ids_list.append(input_ids_i)
@@ -1123,32 +1177,32 @@ class DataCollatorForCondGen:
                     input_ids = input_ids_list 
                     labels = labels_list
 
-                    input_ids_list = []
-                    labels_list = []
-                    np.random.seed(None)
-                    number_id_set = set([i for i in range(21, 34)])
-                    for i in range(len(input_ids)): 
-                        input_ids_i = input_ids[i].tolist()
-                        label_ids_i = labels[i].tolist()
-                        node_num = node_nums[i]
+                    # input_ids_list = []
+                    # labels_list = []
+                    # np.random.seed(None)
+                    # number_id_set = set([i for i in range(21, 34)])
+                    # for i in range(len(input_ids)): 
+                    #     input_ids_i = input_ids[i].tolist()
+                    #     label_ids_i = labels[i].tolist()
+                    #     node_num = node_nums[i]
 
-                        random_idx = np.random.permutation(np.arange(21, 34))[:node_num]
-                        idx = 0
-                        original2random_idx_map = {}
-                        for j, token_id in enumerate(input_ids_i):
-                            if token_id in number_id_set:
-                                original2random_idx_map[token_id] = random_idx[idx]
-                                input_ids_i[j] = random_idx[idx]
-                                idx += 1
-                        for j, token_id in enumerate(label_ids_i):
-                            if token_id in number_id_set:
-                                label_ids_i[j] = original2random_idx_map[token_id]
-                        input_ids_i = torch.tensor(input_ids_i)
-                        label_ids_i = torch.tensor(label_ids_i)
-                        input_ids_list.append(input_ids_i)
-                        labels_list.append(label_ids_i)
-                    input_ids = input_ids_list 
-                    labels = labels_list
+                    #     random_idx = np.random.permutation(np.arange(21, 34))[:node_num]
+                    #     idx = 0
+                    #     original2random_idx_map = {}
+                    #     for j, token_id in enumerate(input_ids_i):
+                    #         if token_id in number_id_set:
+                    #             original2random_idx_map[token_id] = random_idx[idx]
+                    #             input_ids_i[j] = random_idx[idx]
+                    #             idx += 1
+                    #     for j, token_id in enumerate(label_ids_i):
+                    #         if token_id in number_id_set:
+                    #             label_ids_i[j] = original2random_idx_map[token_id]
+                    #     input_ids_i = torch.tensor(input_ids_i)
+                    #     label_ids_i = torch.tensor(label_ids_i)
+                    #     input_ids_list.append(input_ids_i)
+                    #     labels_list.append(label_ids_i)
+                    # input_ids = input_ids_list 
+                    # labels = labels_list
 
             elif self.baseline_format == 'matrix':
                 np.random.seed(None)
@@ -1200,6 +1254,77 @@ class DataCollatorForCondGen:
             else:
                 raise ValueError('baseline_format should be shrink_canonical or matrix')
         
+        if self.matrix_half:
+            np.random.seed(None)
+            input_ids_list = []
+            labels_list = []
+            if self.tokenizer.sep_token_id == None:
+                special_token_ids = set([self.tokenizer.bos_token_id, self.tokenizer.eos_token_id, self.tokenizer.pad_token_id, 3, 4])
+            else:
+                special_token_ids = set([self.tokenizer.bos_token_id, self.tokenizer.eos_token_id, self.tokenizer.pad_token_id, self.tokenizer.sep_token_id])
+            input_strs = self.tokenizer.batch_decode(input_ids)
+            label_strs = self.tokenizer.batch_decode(labels)
+            # edgeId_2_str = {'<edge_1>': 0, '<edge_2>': 1} 
+            # edge_str = ['<edge_1>', '<edge_2>']
+            # : '<no_edge>',  2: '<both_edges>'
+            for i in range(len(input_strs)):
+                input_str = input_strs[i].split(' ')[:-2]
+                n_node = len(input_str)
+                # replace
+                label_str = label_strs[i].split(' ')[:-2]
+                # print('input_str', input_str)
+                # print('label_str', label_str)
+                # label_str = label_strs[i].split(' ')[:-2]
+                netlist_str = label_str[2:]
+                duty_str = label_str[:2]
+                new_netlist_str = []
+                j = 0
+                n_idx = 0
+                while j < len(netlist_str):
+                    node = netlist_str[j]
+                    new_netlist_str.append(node)
+                    ignore_set = set()
+                    edge_id =0
+                    edge_id_dict = {}
+                    j += 1
+                    for k in range(n_node):
+                        # print('netlist_str[j]', netlist_str[j])
+                        if k <= n_idx:
+                            if netlist_str[j] != '<no_edge>':
+                                ignore_set.add(netlist_str[j])
+                        else:
+                            ignore_set_size = len(ignore_set)
+                            if netlist_str[j] != '<no_edge>':
+                                if netlist_str[j] not in ignore_set:
+                                    if netlist_str[j] == '<both_edges>':
+                                        new_netlist_str.append('<both_edges>')
+                                    else:
+                                        if '<edge_1>' in ignore_set and '<edge_2>' == netlist_str[j]:
+                                            new_netlist_str.append('<edge_1>')
+                                        else:
+                                            new_netlist_str.append(netlist_str[j])
+                                        # new_netlist_str.append( edge_str[edgeId_2_str[netlist_str[j]] - ignore_set_size] )
+                                else:
+                                    new_netlist_str.append('<no_edge>')
+                            else:
+                                new_netlist_str.append('<no_edge>')
+                        j+=1
+                    # print(n_idx, len(new_netlist_str))
+                    n_idx += 1
+                input_str = ' '.join(input_str) + ' <sep> '
+                label_str = ' '.join(duty_str) + ' ' + ' '.join(new_netlist_str) + ' <sep> '
+                # print('after augment input_str', input_str)
+                # print('after augment label_str', label_str)
+                input_ids_i = self.tokenizer.encode(input_str)
+                label_ids_i = self.tokenizer.encode(label_str)
+                # print('input_ids_i', input_ids_i, 'label_ids_i', label_ids_i)
+                input_ids_i = torch.tensor(input_ids_i)
+                label_ids_i = torch.tensor(label_ids_i)
+                input_ids_list.append(input_ids_i)
+                labels_list.append(label_ids_i)
+            input_ids = input_ids_list 
+            labels = labels_list
+
         if self.random_causal:
             min_length = 1000000
             for i in range(len(input_ids)):
@@ -1215,21 +1340,47 @@ class DataCollatorForCondGen:
             # in this section, we would like to randomly add n label token to input_ids
             # and remove n token from the end of the input_ids
 
+        if not self.data_augment and type(self.tokenizer) != T5Tokenizer:
+            # concatenate input and label because now we are using GPT2 for casual LM
+            # print('GPT2')
+            input_ids_list = []
+            labels_list = []
+            for i in range(len(input_ids)):
+                input_ids_i = input_ids[i].tolist()
+                labels_ids_i = labels[i].tolist()
+                input_ids_i_temp = [tid for tid in input_ids_i if tid != 220]
+                label_ids_i_temp = [tid for tid in labels_ids_i if tid != 220]
+                labels_ids_i = [-100] * (len(input_ids_i_temp)+7) + label_ids_i_temp + [self.tokenizer.eos_token_id]
+                input_ids_i = input_ids_i_temp + label_ids_i_temp + [self.tokenizer.eos_token_id]
+                # print('input_ids_i', input_ids_i)
+                # print('labels_ids_i', labels_ids_i)
+                input_ids_list.append(torch.tensor(input_ids_i))
+                labels_list.append(torch.tensor(labels_ids_i))
+            input_ids = input_ids_list 
+            labels = labels_list
 
         batch = dict()
         batch['vout'] = torch.stack([prefixes[i]['vout'] for i in range(len(prefixes))])
         batch['eff'] = torch.stack([prefixes[i]['eff'] for i in range(len(prefixes))])
         if self.use_duty_cycle_option_prefix:
             batch['d_cycle_option'] = torch.stack([prefixes[i]['d_cycle_option'] for i in range(len(prefixes))])
-        batch['input_ids'] = torch.nn.utils.rnn.pad_sequence(input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id)
+        if type(self.tokenizer) == T5Tokenizer:
+            batch['input_ids'] = torch.nn.utils.rnn.pad_sequence(input_ids, batch_first=True, padding_value=self.tokenizer.pad_token_id)
+        else:
+            # GPT2 tokenizer
+            batch['input_ids'] = torch.nn.utils.rnn.pad_sequence(input_ids, batch_first=True, padding_value=self.tokenizer.eos_token_id)
+        # print('input_ids', batch['input_ids'].size())
         batch['labels'] = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True, padding_value=IGNORE_INDEX)
+        # print('labels', batch['labels'].size())
         
         # print('after_data_augment')
-        # # print('label', batch['labels'])
+        # # # print('label', batch['labels'])
         # input_str = self.tokenizer.batch_decode(batch['input_ids'])
         # label_str = self.tokenizer.batch_decode(batch['labels'])
         
         # print('input_str', '\n', input_str, '\nlabel_str\n', label_str)
+        # input()
+
         # print('vout', batch['vout'])
         # print('eff', batch['eff'])
         # if self.use_duty_cycle_option_prefix:
@@ -1243,7 +1394,7 @@ class DataCollatorForCondGen:
         # print(result)
         # print('netlist', netlist)
         # print('duty', duty_cycle)
-        # input()
+        
         
         # print('==== in DataCollatorForCondGen ', batch['input_ids'].size(), batch['labels'].size())
         # input('pause')

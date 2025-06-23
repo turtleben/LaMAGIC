@@ -10,9 +10,10 @@ from peft import LoraConfig
 from transformers import LlamaConfig, BertConfig
 from transformers import LlamaForCausalLM, LlamaForSequenceClassification, LlamaTokenizer
 from transformers import BertTokenizer, BertForSequenceClassification
-from transformers import T5Config, T5Tokenizer
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, T5Config, T5ForSequenceClassification, T5TokenizerFast, T5Tokenizer, GPT2Config
 from analog_LLM.utils.tokenizer import CustomTokenizer
 from analog_LLM.models.T5_prefix import T5ForConditionalGeneration, T5EncoderModel, T5ForRegression
+from analog_LLM.models.T5 import T5EncoderForSequenceClassification
 
 @dataclass
 class TrainingArguments(transformers.TrainingArguments):
@@ -92,10 +93,19 @@ def generate_llm_config(args, base_model_path, rl=False):
         tokenizer = CustomTokenizer
         load_param = { "load_in_8bit": False}
         llm_config = None
-        llm_config = T5Config.from_pretrained(args.base_model)
+        llm_config = T5Config.from_pretrained(base_model_path)
         llm_config.dropout_rate = args.dropout_rate
         
         llm_model = T5ForCondGen_Transformer
+    elif args.llm == "gpt2-decoder-only":
+        from analog_LLM.models.gpt2_transformer import GPT2LMHeadModel
+        tokenizer = CustomTokenizer
+        load_param = { "load_in_8bit": False}
+        llm_config = None
+        llm_config = GPT2Config.from_pretrained(base_model_path)
+        llm_config.dropout_rate = args.dropout_rate
+        
+        llm_model = GPT2LMHeadModel
     else: 
         raise NotImplementedError
     if rl:
@@ -147,7 +157,7 @@ def generate_config_param(args):
             report_to="wandb" if args.use_wandb else None,
             run_name=args.wandb_run_name if args.use_wandb else None,
         )
-    elif args.llm == "flan-t5" or args.llm == "flan-t5-baseline" or args.llm == "transformer-encoder-decoder":
+    elif args.llm == "flan-t5" or args.llm == "flan-t5-baseline" or args.llm == "transformer-encoder-decoder" or args.llm == "gpt2-decoder-only":
         train_args = transformers.TrainingArguments(
             per_device_train_batch_size=args.micro_batch_size,
             gradient_accumulation_steps=args.gradient_accumulation_steps,

@@ -172,5 +172,5 @@ def plot_threshold_hist_generation():
 
 if __name__ == "__main__":
     # run()
-    # trn_edgeGen_vertex_permutation()
+    trn_edgeGen_vertex_permutation()
     trn_edgeGen_vertex_permutation_then_no_permute()

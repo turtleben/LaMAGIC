@@ -142,20 +142,23 @@ def read_LLM_output_shrink_canonical(out_stream):
                 netlist[node] = [parent]
     return netlist, duty_cycle
 
-def read_transformer_output_shrink_canonical(out_stream, duty10=False, typeNidx=False):
+def read_transformer_output_shrink_canonical(out_stream, duty10=False, typeNidx=False, common_word=False):
     # <pad> <duty_0.7> <sep> VIN Sb0 Sb1 Sb2 C0 , VOUT Sb0 Sb1 , GND Sa0 C0 , Sa0 Sb2 , <sep>
     if duty10:
         duty_cycle_map = {'<duty_0.1>': 0.1, '<duty_0.2>': 0.2, '<duty_0.3>': 0.3, '<duty_0.4>': 0.4, '<duty_0.5>': 0.5, '<duty_0.6>': 0.6, '<duty_0.7>': 0.7, '<duty_0.8>': 0.8, '<duty_0.9>': 0.9}
     else:
         duty_cycle_map = {'<duty_0.1>': 0.1, '<duty_0.3>': 0.3, '<duty_0.5>': 0.5, '<duty_0.7>': 0.7, '<duty_0.9>': 0.9}
+    common_word_dict = {'VIN': 'A', 'VOUT': 'B', 'GND': 'C', 'Sa': 'D', 'Sb': 'E', 'C': 'F', 'L': 'G'}
+    #help me inverse the key and the content in the previous dict
+    common_word_dict = {v: k for k, v in common_word_dict.items()}
     output_strings = out_stream.split()
     duty_cycle_token = output_strings[1]
     duty_cycle = duty_cycle_map[duty_cycle_token]
-    # print('duty_cycle', duty_cycle)
+    print('duty_cycle', duty_cycle)
 
     out_strings = out_stream.split('<sep>')
     edge_strings = out_strings[1].split(',')
-    # print('edge_strings', edge_strings)
+    print('edge_strings', edge_strings)
     edge_list = []
     if not typeNidx:
         for edge_string in edge_strings:
@@ -172,6 +175,8 @@ def read_transformer_output_shrink_canonical(out_stream, duty10=False, typeNidx=
             edge_strs = edge_string.split()
             while j < len(edge_strs):
                 node = edge_strs[j]
+                if common_word:
+                    node = common_word_dict[node]
                 if node == "VIN" or node == "VOUT" or node == "GND":
                     edge.append(node)
                 else:
@@ -223,8 +228,165 @@ def read_transformer_output_shrink_canonical(out_stream, duty10=False, typeNidx=
                 netlist[node] = [parent]
     return netlist, duty_cycle
 
+def read_transformer_output_shrink_canonical_output_no_type(input_stream, out_stream, duty10=False):
+    # input_stream: VIN 0 VOUT 1 GND 2 Sa 3 Sb 4 Sb 5 Sb 6 Sb 7 <sep> </s>
+    # out_stream: <pad> <duty_0.1> <sep> 0 4 5 6, 1 4, 2 3, 3 5 7, 6 7 <sep> </s>
+    if duty10:
+        duty_cycle_map = {'<duty_0.1>': 0.1, '<duty_0.2>': 0.2, '<duty_0.3>': 0.3, '<duty_0.4>': 0.4, '<duty_0.5>': 0.5, '<duty_0.6>': 0.6, '<duty_0.7>': 0.7, '<duty_0.8>': 0.8, '<duty_0.9>': 0.9}
+    else:
+        duty_cycle_map = {'<duty_0.1>': 0.1, '<duty_0.3>': 0.3, '<duty_0.5>': 0.5, '<duty_0.7>': 0.7, '<duty_0.9>': 0.9}
+    output_strings = out_stream.split()
+    duty_cycle_token = output_strings[1]
+    duty_cycle = duty_cycle_map[duty_cycle_token]
+
+    input_strings = input_stream.split()
+    # print('input_strings', input_strings)
+    node_list = []
+    id_node_map = {}
+    for i in range(0, len(input_strings), 2):
+        node = input_strings[i]
+        if node == "<sep>":
+            break
+        id_node_map[input_strings[i+1]] = node
+        node_list.append(node)
+
+    out_strings = out_stream.split('<sep>')
+    edge_strings = out_strings[1].split(',')
+    edge_list = []
+
+    edge = []
+    # print('node_list', node_list)
+    # print('id_node_map', id_node_map)
+    for edge_string in edge_strings:
+        j = 0
+        edge = []
+        edge_strs = edge_string.split()
+        while j < len(edge_strs):
+            node = id_node_map[edge_strs[j]]
+            if node == "VIN" or node == "VOUT" or node == "GND":
+                edge.append(node)
+            else:
+                node = node + edge_strs[j]
+                edge.append(node)
+            j += 1
+        edge_list.append(edge)
+    # print(edge_list)
+    connect_node_id = 9
+    netlist = {}
+    for edge in edge_list:
+        if 'VIN' in edge:
+            parent = 'IN'
+        elif 'VOUT' in edge:
+            parent = 'OUT'
+        elif 'GND' in edge:
+            parent = '0'
+        else:
+            parent = str(connect_node_id)
+            connect_node_id += 1
+        for node in edge:
+            if node == 'VIN' or node == 'VOUT' or node == 'GND':
+                continue
+            if node in netlist.keys():
+                netlist[node].append(parent)
+            else:
+                netlist[node] = [parent]
+    return netlist, duty_cycle
+
+def read_transformer_matrix_half(vertex_stream, out_stream, duty10=False,):
+    if duty10:
+        duty_cycle_map = {'<duty_0.1>': 0.1, '<duty_0.2>': 0.2, '<duty_0.3>': 0.3, '<duty_0.4>': 0.4, '<duty_0.5>': 0.5, '<duty_0.6>': 0.6, '<duty_0.7>': 0.7, '<duty_0.8>': 0.8, '<duty_0.9>': 0.9}
+    else:
+        duty_cycle_map = {'<duty_0.1>': 0.1, '<duty_0.3>': 0.3, '<duty_0.5>': 0.5, '<duty_0.7>': 0.7, '<duty_0.9>': 0.9}
+    print(vertex_stream, out_stream)
+    output_strings = out_stream.split()
+    duty_cycle_token = output_strings[1]
+    vertex_strings = vertex_stream.split()[:-2]
+    duty_cycle = duty_cycle_map[duty_cycle_token]
+    node_idx = 0
+    edge_sets = set()
+    connect_node_id = 9
+    # parent_dict = {'VIN': 'IN', 'VOUT': 'OUT', 'GND': '0'}
+    # connection_node_dict = {}
+    device_id_dict = {'Sa':0, 'Sb':0, 'L':0, 'C':0}
+    for i in range(len(vertex_strings)):
+        vertex = vertex_strings[i]
+        if vertex == 'VIN' or vertex == 'VOUT' or vertex == 'GND':
+            continue
+        device_id = device_id_dict[vertex]
+        vertex_strings[i] = vertex + str(device_id)
+        device_id_dict[vertex] = device_id_dict[vertex] + 1
+    # print('vertex_strings', vertex_strings)
+    out_strings = out_stream.split('<sep>')
+    edge_strings = out_strings[1].split()
+    # print(edge_strings)
+    idx = 0
+    while idx < len(edge_strings):
+        # node_name = edge_strings[idx]
+        node_name = vertex_strings[node_idx]
+        print('node_name', node_name)
+        # if node_name == 'VIN' or node_name == 'VOUT' or node_name == 'GND':
+        #     for i in range(len(vertex_strings)):
+        #         idx += 1
+        #         continue
+        # else:
+        edge1_list = (node_name,)
+        edge2_list = (node_name,)
+        both_edge_node = None
+        for i in range(len(vertex_strings) - node_idx - 1):
+            idx += 1
+            # if edge_strings[idx] == '<edge_1>' or edge_strings[idx] == '<both_edges>':
+            #     # print((vertex_strings[i]))
+            #     edge1_list += (vertex_strings[i + node_idx + 1],)
+            # if edge_strings[idx] == '<edge_2>' or edge_strings[idx] == '<both_edges>':
+            #     edge2_list += (vertex_strings[i + node_idx + 1],)
+            if edge_strings[idx] == '<edge_1>':
+                # print((vertex_strings[i]))
+                edge1_list += (vertex_strings[i + node_idx + 1],)
+            if edge_strings[idx] == '<edge_2>':
+                edge2_list += (vertex_strings[i + node_idx + 1],)
+            if edge_strings[idx] == '<both_edges>':
+                both_edge_node = vertex_strings[i + node_idx + 1]
+        if len(edge1_list) > 1:
+            if both_edge_node is not None:
+                edge1_list += (both_edge_node,)
+            print('edge1_list', edge1_list)
+            edge1_list = tuple(sorted(edge1_list))
+            edge_sets.add(edge1_list)
+        if len(edge2_list) > 1:
+            if both_edge_node is not None:
+                edge2_list += (both_edge_node,)
+            print('edge2_list', edge2_list)
+            edge2_list = tuple(sorted(edge2_list))
+            edge_sets.add(edge2_list)
+        node_idx += 1
+        idx += 1
+    print('edge_sets', edge_sets)
+    connect_node_id = 9
+    netlist = {}
+    for edge in edge_sets:
+        if 'VIN' in edge:
+            parent = 'IN'
+        elif 'VOUT' in edge:
+            parent = 'OUT'
+        elif 'GND' in edge:
+            parent = '0'
+        else:
+            parent = str(connect_node_id)
+            connect_node_id += 1
+        for node in edge:
+            if node == 'VIN' or node == 'VOUT' or node == 'GND':
+                continue
+            if node in netlist.keys():
+                netlist[node].append(parent)
+            else:
+                netlist[node] = [parent]
+    print(netlist)
+    input()
+    return netlist, duty_cycle
+
+
 def read_transformer_output_mask(vertex_stream, out_stream, duty10=False, pre_eval=False):
-    # print(vertex_stream, out_stream)
+    print(vertex_stream, out_stream)
     # input()
     # <pad> <duty_0.7> <sep> VIN Sb0 Sb1 Sb2 C0 , VOUT Sb0 Sb1 , GND Sa0 C0 , Sa0 Sb2 , <sep>
     if duty10:
@@ -287,7 +449,16 @@ def read_transformer_output_mask(vertex_stream, out_stream, duty10=False, pre_ev
             edge_sets.add(edge2_list)
         node_idx += 1
         idx += 1
+    print('edge_sets', edge_sets)
+    edge_sets = [set(edge) for edge in edge_sets]
+    # Remove subsets
+    filtered_edge_sets = []
+    for edge in edge_sets:
+        if not any(edge < other for other in edge_sets if edge != other):
+            filtered_edge_sets.append(edge)
 
+    # Convert back to tuples to maintain the original data format
+    edge_sets = {tuple(edge) for edge in filtered_edge_sets}
     connect_node_id = 9
     netlist = {}
     for edge in edge_sets:
@@ -839,6 +1010,7 @@ def sim_generation_output(path, inputs, out_stream_logit, baseline_format='origi
         netlist, duty_cycle = read_LLM_ouput(out_stream_logit)
     elif baseline_format == 'shrink_canonical':
         if llm == 'transformer-encoder-decoder':
+            print('here')
             netlist, duty_cycle = read_transformer_output_shrink_canonical(out_stream_logit, duty10, typeNidx)
         else:
             netlist, duty_cycle = read_LLM_output_shrink_canonical(out_stream_logit)
@@ -851,6 +1023,7 @@ def sim_generation_output(path, inputs, out_stream_logit, baseline_format='origi
         raise NotImplementedError
     # print('read_LLM_ouput')
     # path = "sim.cki"
+    print(netlist)
     convert_netlist_cki(path, netlist, duty_cycle)
     # print('convert_netlist_cki')
     killed = simulate(path)

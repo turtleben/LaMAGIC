@@ -26,7 +26,7 @@ from sklearn.model_selection import train_test_split
 from analog_LLM.utils.params import *
 from analog_LLM.utils.dataset import SupervisedDataset
 from parsers.simulation import sim_generation_output, read_LLM_ouput, read_masked_LLM_output, sim_masked_generation_output, read_transformer_output_mask
-from parsers.simulation import convert_netlist_2_graph, read_LLM_output_shrink_canonical, read_LLM_output_shrink_canonical_dutycycle, read_transformer_output_shrink_canonical
+from parsers.simulation import convert_netlist_2_graph, read_LLM_output_shrink_canonical, read_LLM_output_shrink_canonical_dutycycle, read_transformer_output_shrink_canonical, read_transformer_output_shrink_canonical_output_no_type, read_transformer_matrix_half
 from parsers.util import jdump
 from analog_LLM.utils.data_collator import DataCollatorForT5MLM, compute_input_and_target_lengths
 from analog_LLM.utils.dataset import DataCollatorForSupervisedDataset
@@ -381,9 +381,9 @@ def val(args, model, tokenizer, dset_trn, dset_val, data_collator, cir_data, get
         # output = tokenizer.batch_decode(generation_output, skip_special_tokens=True)
         # label = tokenizer.batch_decode(labels, skip_special_tokens=True)
         # # print("Current data id: ", idx)
-        print("Input: ", inputs)
-        print("Output:", output)
-        print("Label: ", label)
+        # print("Input: ", inputs)
+        # print("Output:", output)
+        # print("Label: ", label)
         # input()
         
         if get_mse:
@@ -408,7 +408,6 @@ def val(args, model, tokenizer, dset_trn, dset_val, data_collator, cir_data, get
             
         if sim:
             try:
-                # output = '<pad> ' + label
                 path = os.path.join(args.output_dir, 'sim.cki')
                 if args.baseline_format == "original":
                     netlist, duty_cycle = read_LLM_ouput(output)
@@ -418,7 +417,11 @@ def val(args, model, tokenizer, dset_trn, dset_val, data_collator, cir_data, get
                 elif args.baseline_format == "shrink_canonical":
                     if args.llm == 'transformer-encoder-decoder':
                         # print('args.llm:', args.llm)
-                        netlist, duty_cycle = read_transformer_output_shrink_canonical(output, args.duty10, args.typeNidx)
+                        # print('args.output_no_type:', args.output_no_type)
+                        if args.output_no_type:
+                            netlist, duty_cycle = read_transformer_output_shrink_canonical_output_no_type(inputs, output, args.duty10)
+                        else:
+                            netlist, duty_cycle = read_transformer_output_shrink_canonical(output, args.duty10, args.typeNidx, args.common_word)
                         label_vout = float(vout[0])
                         label_eff = float(eff[0])
                     else:
@@ -434,7 +437,10 @@ def val(args, model, tokenizer, dset_trn, dset_val, data_collator, cir_data, get
                     label_eff = float(input_strings[13][:len(input_strings[13])-1])
                 elif args.baseline_format == 'matrix':
                     if args.llm == 'transformer-encoder-decoder':
-                        netlist, duty_cycle = read_transformer_output_mask(inputs, output, args.duty10)
+                        if args.matrix_half:
+                            netlist, duty_cycle = read_transformer_matrix_half(inputs, output, args.duty10)
+                        else:
+                            netlist, duty_cycle = read_transformer_output_mask(inputs, output, args.duty10)
                         label_vout = float(vout[0])
                         label_eff = float(eff[0])
                         # input('transformer-encoder-decoder')
@@ -509,7 +515,6 @@ def val(args, model, tokenizer, dset_trn, dset_val, data_collator, cir_data, get
                 scalar_labels.append(label_vout)
                 eff_logits.append(output_eff)
                 eff_labels.append(label_eff)
-            # #TODO extract the label power conversion ratio
             except:
                 print('wrong_graph_num')
                 wrong_graph_num += 1
@@ -848,131 +853,111 @@ def val_maskedGen(args, model, tokenizer, data_collator, dset_trn, dset_val, cir
                 total_loss.append(generation_output.loss.item())
                 # generation_output = combine_masked_input_output_encoder(input_ids, generation_output.logits, data_collator)
         bsz = len(input_ids)
-        # for bs_idx in range(bsz):
-        #     d_dict = {}
-        #     num_data += 1
-        #     inputs = tokenizer.decode(input_ids[bs_idx], skip_special_tokens=False)
-        #     output = tokenizer.decode(generation_output[bs_idx], skip_special_tokens=False)
-        #     label = tokenizer.decode(labels[bs_idx], skip_special_tokens=False)
-        #     d_dict["input"] = inputs
-        #     d_dict["output"] = output
-        #     d_dict["label"] = label
-        #     # print(generation_output)
-        #     # print("Current data id: ", idx)
-        #     # print("Input: ", inputs)
-        #     # print("Output:", output)
-        #     # print("Label: ", label)
-        #     # input()
-        #     # continue
+        for bs_idx in range(bsz):
+            d_dict = {}
+            num_data += 1
+            inputs = tokenizer.decode(input_ids[bs_idx], skip_special_tokens=False)
+            output = tokenizer.decode(generation_output[bs_idx], skip_special_tokens=False)
+            label = tokenizer.decode(labels[bs_idx], skip_special_tokens=False)
+            d_dict["input"] = inputs
+            d_dict["output"] = output
+            d_dict["label"] = label
+            # print(generation_output)
+            # print("Current data id: ", idx)
+            # print("Input: ", inputs)
+            # print("Output:", output)
+            # print("Label: ", label)
+            # input()
+            # continue
                 
-        #     if sim:
-        #         try:
-        #             if args.mask_style == 'T5':
-        #                 # output = label
-        #                 if args.llm == 'flan-t5-baseline':
-        #                     st_token_index = inputs.find('<extra_id_0>')
-        #                     inputs = inputs[st_token_index-11:]
-        #                 # print('modified inputs', inputs)
-        #                 output = combine_masked_input_output(inputs, output)
-        #             elif args.mask_style == 'graph_mask':
-        #                 if args.llm == 'flan-t5' or args.llm == 'flan-t5-baseline':
-        #                     output = output[5:] # remove <pad>
-        #                 elif args.llm == 'flan-t5-encoder':
-        #                     output = output
-        #             else:
-        #                 raise NotImplementedError
-        #             # print(output)
-        #             netlist, duty_cycle = read_masked_LLM_output(output, args.order)
-        #             # print('netlist', netlist, '\n duty_cycle', duty_cycle)
-        #             graph = convert_netlist_2_graph(node_tokens, netlist)
-        #             # print('graph', graph)
-        #             brand_new = True
-        #             for i, trn_graph in enumerate(trn_graphs):
-        #                 if duty_cycle == trn_duty_cycles[i] and nx.vf2pp_is_isomorphic(trn_graph, graph, node_label='type'):
-        #                     brand_new = False
-        #                     result = {}
-        #                     result['Vout'] = trn_vouts[i] * 100
-        #                     result['efficiency'] = trn_effs[i]
-        #                     result['result_valid'] = True
-        #                     # print('in train ', result)
-        #                     if trn_effs[i] == -1:
-        #                         result['result_valid'] = False
-        #                     break
-        #             if brand_new:
-        #                 print('This graph is not in the training set')
-        #                 path = os.path.join(args.output_dir, 'sim.cki')
-        #                 result = sim_masked_generation_output(path, output, args.order)
-        #                 # print('sim ', result)
-        #                 datum = {}
-        #                 datum['circuit_str'] = output
-        #                 datum['eff'] = float(result['efficiency'])
-        #                 datum['vout'] = float(result['Vout']) / 100.0
-        #                 if datum['eff'] == -1:
-        #                     datum['result_valid'] = False
-        #                 new_graph_num += 1
-        #                 cir_data.append(datum)             
+            if sim:
+                try:
+                    if args.mask_style == 'T5':
+                        # output = label
+                        if args.llm == 'flan-t5-baseline':
+                            st_token_index = inputs.find('<extra_id_0>')
+                            inputs = inputs[st_token_index-11:]
+                        # print('modified inputs', inputs)
+                        output = combine_masked_input_output(inputs, output)
+                    elif args.mask_style == 'graph_mask':
+                        if args.llm == 'flan-t5' or args.llm == 'flan-t5-baseline':
+                            output = output[5:] # remove <pad>
+                        elif args.llm == 'flan-t5-encoder':
+                            output = output
+                    else:
+                        raise NotImplementedError
+                    # print(output)
+                    netlist, duty_cycle = read_masked_LLM_output(output, args.order)
+                    # print('netlist', netlist, '\n duty_cycle', duty_cycle)
+                    graph = convert_netlist_2_graph(node_tokens, netlist)
+                    # print('graph', graph)
+                    brand_new = True
+                    for i, trn_graph in enumerate(trn_graphs):
+                        if duty_cycle == trn_duty_cycles[i] and nx.vf2pp_is_isomorphic(trn_graph, graph, node_label='type'):
+                            brand_new = False
+                            result = {}
+                            result['Vout'] = trn_vouts[i] * 100
+                            result['efficiency'] = trn_effs[i]
+                            result['result_valid'] = True
+                            # print('in train ', result)
+                            if trn_effs[i] == -1:
+                                result['result_valid'] = False
+                            break
+                    if brand_new:
+                        print('This graph is not in the training set')
+                        path = os.path.join(args.output_dir, 'sim.cki')
+                        result = sim_masked_generation_output(path, output, args.order)
+                        # print('sim ', result)
+                        datum = {}
+                        datum['circuit_str'] = output
+                        datum['eff'] = float(result['efficiency'])
+                        datum['vout'] = float(result['Vout']) / 100.0
+                        if datum['eff'] == -1:
+                            datum['result_valid'] = False
+                        new_graph_num += 1
+                        cir_data.append(datum)             
                         
-        #             d_dict["result"] = result
-        #             if result['result_valid'] == False:
-        #                 invalid_graph_num += 1
-        #                 print('invalid_graph_num')
-        #                 # input()
-        #                 continue
-        #             output_power_ratio = float(result['Vout']) / 100.0
-        #             output_eff = float(result['efficiency'])
-        #             if args.normalize:
-        #                 # vout = vout * torch.max(torch.abs(stat_dict['min_vout']), torch.abs(stat_dict['max_vout']))
-        #                 vout, eff = denormalize(vout, eff, stat_dict)
-        #                 # eff = eff
-        #                 # vout = vout * (stat_dict['max_vout'] - stat_dict['min_vout']) + stat_dict['min_vout']
-        #                 # eff = eff * (stat_dict['max_eff'] - stat_dict['min_eff']) + stat_dict['min_eff']
-        #             #     output_power_ratio = output_power_ratio * (stat_dict['max_vout'] - stat_dict['min_vout']) + stat_dict['min_vout']
-        #             #     output_eff = output_eff * (stat_dict['max_eff'] - stat_dict['min_eff']) + stat_dict['min_eff']
-        #             label_vout = float(vout[bs_idx])
-        #             label_eff = float(eff[bs_idx])
-        #             print('voltage label: ', label_vout, 'output: ', output_power_ratio)
-        #             print('eff     label: ', label_eff, 'output: ', output_eff)
-        #             # input()
-        #             data_generated.append(d_dict)
-        #             scalar_logits.append(output_power_ratio)
-        #             scalar_labels.append(label_vout)
-        #             eff_logits.append(output_eff)
-        #             eff_labels.append(label_eff)
-        #             #TODO extract the label power conversion ratio
-        #         except:
-        #             print('wrong_graph_num')
-        #             wrong_graph_num += 1
-        #     # input()
+                    d_dict["result"] = result
+                    if result['result_valid'] == False:
+                        invalid_graph_num += 1
+                        print('invalid_graph_num')
+                        # input()
+                        continue
+                    output_power_ratio = float(result['Vout']) / 100.0
+                    output_eff = float(result['efficiency'])
+                    if args.normalize:
+                        # vout = vout * torch.max(torch.abs(stat_dict['min_vout']), torch.abs(stat_dict['max_vout']))
+                        vout, eff = denormalize(vout, eff, stat_dict)
+                        # eff = eff
+                        # vout = vout * (stat_dict['max_vout'] - stat_dict['min_vout']) + stat_dict['min_vout']
+                        # eff = eff * (stat_dict['max_eff'] - stat_dict['min_eff']) + stat_dict['min_eff']
+                    #     output_power_ratio = output_power_ratio * (stat_dict['max_vout'] - stat_dict['min_vout']) + stat_dict['min_vout']
+                    #     output_eff = output_eff * (stat_dict['max_eff'] - stat_dict['min_eff']) + stat_dict['min_eff']
+                    label_vout = float(vout[bs_idx])
+                    label_eff = float(eff[bs_idx])
+                    print('voltage label: ', label_vout, 'output: ', output_power_ratio)
+                    print('eff     label: ', label_eff, 'output: ', output_eff)
+                    # input()
+                    data_generated.append(d_dict)
+                    scalar_logits.append(output_power_ratio)
+                    scalar_labels.append(label_vout)
+                    eff_logits.append(output_eff)
+                    eff_labels.append(label_eff)
+                    #TODO extract the label power conversion ratio
+                except:
+                    print('wrong_graph_num')
+                    wrong_graph_num += 1
+            # input()
             
-        # if num_data % 500 == 0:
-        #     print(total_batch, np.mean(total_loss))
-        #     loss = nn.MSELoss()(torch.FloatTensor(scalar_logits), torch.FloatTensor(scalar_labels))
-        #     print('current mse (vout):        ', loss)
-        #     loss = nn.MSELoss()(torch.FloatTensor(eff_logits), torch.FloatTensor(eff_labels))
-        #     print('current mse (eff):         ', loss)
-        #     print('current invalid_graph_num: ', invalid_graph_num)
-        #     print('current wrong_graph_num:   ', wrong_graph_num)
-            # vout_logits_np = np.array(scalar_logits)
-            # vout_labels_np = np.array(scalar_labels)
-            # save_logits(vout_logits_np, vout_labels_np, metrics='vout')
-            # eff_logits_np = np.array(eff_logits)
-            # eff_labels_np = np.array(eff_labels)
-            # save_logits(eff_logits_np, eff_labels_np, metrics='eff')
-            # jdump(data_generated, os.path.join(args.output_dir, 'data_generated.json')) 
-            # cir_d_path = os.path.join(args.text_data_dir, args.LUT_cir_data_name)
-            # try:
-            #     with open(cir_d_path, 'w') as f:
-            #         json.dump(cir_data, f)
-            # except:
-            #     print('Failed to save cir_data')
-    print('total loss: ', np.mean(total_loss))
-    print('finish')
-    input()
-    # plt.hist(total_loss, bins=100)
-    # plt.savefig(os.path.join('plot/loss_hist.png'))
-    # plt.close()
+        if num_data % 500 == 0:
+            print(total_batch, np.mean(total_loss))
+            loss = nn.MSELoss()(torch.FloatTensor(scalar_logits), torch.FloatTensor(scalar_labels))
+            print('current mse (vout):        ', loss)
+            loss = nn.MSELoss()(torch.FloatTensor(eff_logits), torch.FloatTensor(eff_labels))
+            print('current mse (eff):         ', loss)
+            print('current invalid_graph_num: ', invalid_graph_num)
+            print('current wrong_graph_num:   ', wrong_graph_num)
 
-    # input()
     if sim:
         jdump(data_generated, os.path.join(args.output_dir, 'data_generated.json')) 
         print('current invalid_graph_num: ', invalid_graph_num)
@@ -1346,26 +1331,3 @@ def val_regression(args, model, tokenizer, dset_trn, dset_val):
     
     loss = nn.MSELoss()(torch.FloatTensor(scalar_logits), torch.FloatTensor(scalar_labels))
     print('current mse: ', loss)
-
-
-'''
-VIN <no_edge> <no_edge> <no_edge> <edge_1> <no_edge> <no_edge> <no_edge> <no_edge> 
-VOUT <no_edge> <no_edge> <no_edge> <edge_1> <no_edge> <no_edge> <no_edge> <edge_1> 
-GND <no_edge> <no_edge> <no_edge> <no_edge> <edge_1> <no_edge> <no_edge> <no_edge> 
-Sb <edge_1> <edge_2> <no_edge> <no_edge> <no_edge> <no_edge> <no_edge> <edge_2> 
-Sb <no_edge> <no_edge> <edge_1> <no_edge> <no_edge> <no_edge> <edge_2> <no_edge> 
-Sb <no_edge> <no_edge> <no_edge> <no_edge> <no_edge> <no_edge> <edge_1> <edge_2> 
-Sb <no_edge> <no_edge> <no_edge> <no_edge> <edge_1> <edge_2> <no_edge> <no_edge> 
-C <no_edge> <edge_1> <no_edge> <edge_1> <no_edge> <edge_2> <no_edge> <no_edge> <sep> 
-<extra_id_1> <unselect> <unselect> <unselect> <unselect> <select> <sep>
-
-VIN <no_edge> <no_edge> <no_edge> <no_edge> <edge_1> <edge_1> <edge_1> <no_edge> 
-VOUT <no_edge> <no_edge> <no_edge> <no_edge> <edge_1> <edge_1> <no_edge> <no_edge> 
-GND <no_edge> <no_edge> <no_edge> <edge_1> <no_edge> <no_edge> <no_edge> <no_edge> 
-Sa <no_edge> <no_edge> <edge_1> <no_edge> <no_edge> <no_edge> <no_edge> <edge_2> 
-Sb <edge_1> <edge_2> <no_edge> <no_edge> <no_edge> <both_edges> <edge_1> <no_edge> 
-Sb <edge_1> <edge_2> <no_edge> <no_edge> <both_edges> <no_edge> <edge_1> <no_edge> 
-Sb <edge_1> <no_edge> <no_edge> <no_edge> <edge_1> <edge_1> <no_edge> <edge_2> 
-C <no_edge> <no_edge> <no_edge> <edge_1> <no_edge> <no_edge> <edge_2> <no_edge> <sep> 
-<extra_id_1> <unselect> <unselect> <unselect> <select> <unselect> <sep>
-'''

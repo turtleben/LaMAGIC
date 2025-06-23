@@ -297,11 +297,12 @@ class RawTextDatasetConditionalGen_Transformer(Dataset):
         # targets = [ f"{example['output']} {tokenizer.eos_token}"
         #             for example in list_data_dict]
         
+        total_token_length = 0.0
         self.prefixes = []
         self.n_nodes = []
         self.input_ids = []
         self.label_ids = []
-        for d_dict in list_data_dict:
+        for d_dict in tqdm(list_data_dict):
             prefix_dict = {}
             prefix_dict['vout'] = torch.as_tensor([d_dict['vout']])
             prefix_dict['eff'] = torch.as_tensor([d_dict['eff']])
@@ -314,25 +315,33 @@ class RawTextDatasetConditionalGen_Transformer(Dataset):
                     else:
                         prefix_dict['d_cycle_option'] = torch.as_tensor([0.1, 0.3, 0.5, 0.7, 0.9])
             # print(d_dict['input'])
-            input_ids = self.tokenizer.encode(d_dict['input'])
+            input_ids = self.tokenizer.encode(" ".join(d_dict['input'].split()))
             # input_ids = self.tokenizer(d_dict['input'], padding="longest", return_tensors="pt",
             #             max_length=self.tokenizer.model_max_length, truncation=True,).input_ids[0]
-            self.input_ids.append(input_ids)
-            # print(d_dict['output'])
-            label_ids = self.tokenizer.encode(d_dict['output'])
+            label_ids = self.tokenizer.encode(" ".join(d_dict['output'].split()))
+            if config.tokenizer == "gpt2":
+                input_ids = [tid for tid in input_ids if tid != 220]
+                label_ids = [tid for tid in label_ids if tid != 220]
+            total_token_length += len(label_ids)
             # label_ids = self.tokenizer(d_dict['output'], padding="longest", return_tensors="pt",
             #             max_length=self.tokenizer.model_max_length, truncation=True,).input_ids[0]
+            self.input_ids.append(input_ids)
             self.label_ids.append(label_ids)
             self.prefixes.append(prefix_dict)
-            # inputs = tokenizer.decode(input_ids)
-            # label = tokenizer.decode(label_ids)
-            # print('input: ', inputs)
-            # print('label: ', label)
+            inputs = tokenizer.decode(input_ids)
+            label = tokenizer.decode(label_ids)
+            print('input: ', inputs)
+            print('label: ', label)
+            print('input_ids', input_ids)
+            print('label_ids', label_ids)
+            input()
             # print(prefix_dict['vout'])
             # print(prefix_dict['eff'])
             # input('stop')
         assert len(self.input_ids) == len(self.label_ids) == len(self.prefixes)
         print('len(self.input_ids): ', len(self.input_ids))
+        print('total_token_length: ', total_token_length / float(len(self.input_ids)))
+        # input()
         data_dict = {}
         data_dict['prefixes'] = self.prefixes
         data_dict['n_nodes'] = self.n_nodes
@@ -348,6 +357,8 @@ class RawTextDatasetConditionalGen_Transformer(Dataset):
         print('data_dict["input_ids"]: ',len(data_dict["input_ids"]))
         inputs = tokenizer.decode(data_dict["input_ids"][0])
         label = tokenizer.decode(data_dict["labels"][0])
+        print('input_ids: ', data_dict["input_ids"][0])
+        print('labels: ', data_dict["labels"][0])
         print('input: ', inputs)
         print('label: ', label)
     def __len__(self):
