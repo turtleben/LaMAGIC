@@ -125,7 +125,7 @@ If you use this work in your research, please cite our papers:
 
 @inproceedings{chang2025lamagic2,
   title={{L}a{MAGIC}2: Advanced Circuit Formulations for Language Model-Based Analog Topology Generation},
-  author={Chang, Chen-Chia and others},
+  author={Chang, Chen-Chia and Lin, Wan-Hsuan and Shen, Yikang and Chen, Yiran and Zhang, Xin},
   booktitle={Proceedings of the 42st International Conference on Machine Learning},
   year={2025},
   organization =    {PMLR},
