@@ -498,7 +498,7 @@ if __name__ == '__main__':
     prefix = "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked"
     data_path = prefix + "dataset_all_345_regenerate_prune_isomophic_new.json"
     # the output path for the text data after transformation
-    output_path = os.path.join('/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/dataset20220523', 'dataset_all_345_regenerate_prune_isomophic_topology.json')
+    output_path = os.path.join("/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked", 'dataset_all_345_regenerate_prune_isomophic_new.json')
     parse_json_data_convert_raw_2_matrix(data_path=data_path, output_path=output_path)
 
     # raw data path for 6-component circuits

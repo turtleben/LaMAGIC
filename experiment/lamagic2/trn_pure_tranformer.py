@@ -21,7 +21,7 @@ def tokenized(config):
     config.tokenized = False
     LLM_builder = AnalogTransformerBuilder(config)
 
-def run_topogen_matrix_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=False):
+def run_SFM_T5tokenizer_dataaug(need_to_tokenize=False):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
     config.target_data = 'dataset_all_345_matrix_dutycycle_first.json'
@@ -52,6 +52,8 @@ def run_topogen_matrix_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=False):
     config.eval_steps = 400
 
     config.data_augment = True
+    # upload LaMAGIC2-345comp-SFM-dataaug
+    # https://huggingface.co/turtleben/LaMAGIC2-345comp-SFM-dataaug/tree/main
     config.wandb_run_name = 'matrix-loadT5andTokenizer-data345new-connection-aug-epoch120'
     config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
 
@@ -64,7 +66,7 @@ def run_topogen_matrix_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=False):
     LLM_builder.train() # train LLM
     # LLM_builder.val(sim=True)
 
-def run_topogen_matrix_dutyfirst_T5tokenizer_noaug(need_to_tokenize=False):
+def run_SFM_T5tokenizer_noaug(need_to_tokenize=False):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
     config.target_data = 'dataset_all_345_matrix_dutycycle_first.json'
@@ -98,6 +100,7 @@ def run_topogen_matrix_dutyfirst_T5tokenizer_noaug(need_to_tokenize=False):
     config.our_model_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
     config.data_augment = False
     config.finetune_from_ours = True
+    # upload LaMAGIC2-345comp-SFM-dataaug-noaug
     config.wandb_run_name = 'matrix-loadT5andTokenizer-data345new-connection-aug-noaug-epoch120'
     config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
 
@@ -105,7 +108,7 @@ def run_topogen_matrix_dutyfirst_T5tokenizer_noaug(need_to_tokenize=False):
     LLM_builder.train() # train LLM
     LLM_builder.val(sim=True)
 
-def run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=False):
+def run_SFCI_T5tokenizer_dataaug(need_to_tokenize=False):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
     config.target_data = 'dataset_345_shrink_canonical_typeNidx_dutycycle_first.json'
@@ -133,13 +136,13 @@ def run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_dataaug(need_to_
     config.num_epochs = 120
     config.eval_steps = 400
 
-    # val in 2413 tmux 6, need to change data_collator 
     # current best formulation
     config.data_augment = True
     config.load_pretrained = False
     config.use_duty_cycle_option_prefix = True
     config.random_causal = False
     config.dropout_rate = 0.15
+    # upload LaMAGIC2-345comp-SFCI-dataaug
     config.wandb_run_name = 'shrink_canonical_typeNidx_loadT5andTokenizer_useduty-data345new-connection-aug-epoch120'
     config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
 
@@ -152,7 +155,7 @@ def run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_dataaug(need_to_
     LLM_builder.train() # train LLM
     # LLM_builder.val(sim=True)
 
-def run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_noaug():
+def run_SFCI_T5tokenizer_noaug():
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
     config.target_data = 'dataset_345_shrink_canonical_typeNidx_dutycycle_first.json'
@@ -189,6 +192,7 @@ def run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_noaug():
     config.data_augment = False
     config.dropout_rate = 0.1
     config.finetune_from_ours = True
+    # upload LaMAGIC2-345Comp-SFCI-dataaug-noaug
     config.wandb_run_name = 'shrink_canonical_typeNidx_loadT5andTokenizer_useduty-data345new-connection-aug-noaug-epoch120'
     config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
 
@@ -281,16 +285,16 @@ if __name__ == "__main__":
     Next, run the training and validation without data augmentation. 
     It loads the model with data augmentation and finetunes it without data augmentation.
     '''
-    run_topogen_matrix_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=True)
-    run_topogen_matrix_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=False)
-    run_topogen_matrix_dutyfirst_T5tokenizer_noaug()
+    run_SFM_T5tokenizer_dataaug(need_to_tokenize=True)
+    run_SFM_T5tokenizer_dataaug(need_to_tokenize=False)
+    run_SFM_T5tokenizer_noaug()
 
     '''
     The code for SFCI (LaMAGIC2) training with T5 tokenizer and data augmentation
     '''
-    run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=True)
-    run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_dataaug(need_to_tokenize=False)
-    run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer_noaug()
+    run_SFCI_T5tokenizer_dataaug(need_to_tokenize=True)
+    run_SFCI_T5tokenizer_dataaug(need_to_tokenize=False)
+    run_SFCI_T5tokenizer_noaug()
 
     '''
     The code for plotting the success rate under different thresholds

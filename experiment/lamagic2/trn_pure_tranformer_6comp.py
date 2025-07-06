@@ -20,7 +20,7 @@ def tokenized(config):
     config.tokenized = False
     LLM_builder = AnalogTransformerBuilder(config)
 
-def run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=500):
+def run_SFCI_T5tokenizer(need_to_tokenize=False, trn_data_num=500):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
     config.LUT_cir_data_name = "dataset_6_regenerate_LUT_for_eval.json"
@@ -102,7 +102,7 @@ def run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer(need_to_tokenize
     LLM_builder.train() # train LLM
     LLM_builder.val(sim=True)
 
-def run_topogen_matrix_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=500):
+def run_SFM_T5tokenizer(need_to_tokenize=False, trn_data_num=500):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
     config.LUT_cir_data_name = "dataset_6_regenerate_LUT_for_eval.json"
@@ -245,18 +245,18 @@ if __name__ == "__main__":
     This will create the tokenized dataset files in the specified directory. You comment this line after the first run.
     Then, run the training with data amount 500 or 1000 or 2000.
     '''
-    run_topogen_matrix_dutyfirst_T5tokenizer(need_to_tokenize=True, trn_data_num=500)
-    run_topogen_matrix_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=500)
-    run_topogen_matrix_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=1000)
-    run_topogen_matrix_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=2000)
+    run_SFM_T5tokenizer(need_to_tokenize=True, trn_data_num=500)
+    run_SFM_T5tokenizer(need_to_tokenize=False, trn_data_num=500)
+    run_SFM_T5tokenizer(need_to_tokenize=False, trn_data_num=1000)
+    run_SFM_T5tokenizer(need_to_tokenize=False, trn_data_num=2000)
 
     '''
     The code for SFCI (LaMAGIC2) that finetunes on 6-component circuit.
     '''
-    run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer(need_to_tokenize=True, trn_data_num=500)
-    run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=500)
-    run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=1000)
-    run_topogen_shrink_canonical_typeNidx_dutyfirst_T5tokenizer(need_to_tokenize=False, trn_data_num=2000)
+    run_SFCI_T5tokenizer(need_to_tokenize=True, trn_data_num=500)
+    run_SFCI_T5tokenizer(need_to_tokenize=False, trn_data_num=500)
+    run_SFCI_T5tokenizer(need_to_tokenize=False, trn_data_num=1000)
+    run_SFCI_T5tokenizer(need_to_tokenize=False, trn_data_num=2000)
 
     '''
     The code for plotting the success rate under different thresholds.
