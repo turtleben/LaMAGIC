@@ -106,6 +106,31 @@ python experiment/lamagic2/trn_pure_tranformer.py
 python experiment/lamagic2/trn_pure_tranformer_6comp.py
 ```
 
+#### Released Model Checkpoints:
+
+* **3, 4, 5-component circuits (SFM):**
+
+  1. Trained on SFM with data augmentation (vertex random shuffle): [LaMAGIC2-345comp-SFM-dataaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFM-dataaug)
+  2. After data augment, trained on SFM without data augmentation: [LaMAGIC2-345comp-SFM-noaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFM-noaug)
+
+* **3, 4, 5-component circuits (SFCI):**
+
+  1. Trained on SFCI with data augmentation (vertex random shuffle): [LaMAGIC2-345comp-SFCI-dataaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFCI-dataaug)
+  2. After data augment, trained on SFCI without data augmentation: [LaMAGIC2-345comp-SFCI-noaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFCI-noaug)
+
+* **6-component circuits (SFM):**
+
+  * [LaMAGIC2-6Comp-SFM-dnum500](https://huggingface.co/turtleben/LaMAGIC2-6Comp-SFM-dnum500)
+  * [LaMAGIC2-6Comp-SFM-dnum1000](https://huggingface.co/turtleben/LaMAGIC2-6Comp-SFM-dnum1000)
+  * [LaMAGIC2-6Comp-SFM-dnum2000](https://huggingface.co/turtleben/LaMAGIC2-6Comp-SFM-dnum2000)
+
+* **6-component circuits (SFCI):**
+
+  * [LaMAGIC2-6Comp-SFCI-dnum500](https://huggingface.co/turtleben/LaMAGIC2-6Comp-SFCI-dnum500)
+  * [LaMAGIC2-6Comp-SFCI-dnum1000](https://huggingface.co/turtleben/LaMAGIC2-6Comp-SFCI-dnum1000)
+  * [LaMAGIC2-6Comp-SFCI-dnum2000](https://huggingface.co/turtleben/LaMAGIC2-6Comp-SFCI-dnum2000)
+
+
 ---
 
 ## Citation
