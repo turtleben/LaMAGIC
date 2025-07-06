@@ -113,18 +113,22 @@ python experiment/lamagic2/trn_pure_tranformer_6comp.py
 If you use this work in your research, please cite our papers:
 
 ```bibtex
-@inproceedings{chang2024lamagic,
-  title={LaMAGIC: Language-Model-based Automated Generation of Integrated Circuits},
-  author={Chang, Chen-Chia and others},
-  booktitle={International Conference on Machine Learning},
-  year={2024}
+@InProceedings{chang2024lamagic,
+  title = 	 {{L}a{MAGIC}: Language-Model-based Topology Generation for Analog Integrated Circuits},
+  author =       {Chang, Chen-Chia and Shen, Yikang and Fan, Shaoze and Li, Jing and Zhang, Shun and Cao, Ningyuan and Chen, Yiran and Zhang, Xin},
+  booktitle = 	 {Proceedings of the 41st International Conference on Machine Learning},
+  pages = 	 {6253--6262},
+  year = 	 {2024},
+  month = 	 {21--27 Jul},
+  organization =    {PMLR},
 }
 
 @inproceedings{chang2025lamagic2,
-  title={LaMAGIC2: Enhanced Language-Model-based Topology Generation for Analog Circuits},
+  title={{L}a{MAGIC}2: Advanced Circuit Formulations for Language Model-Based Analog Topology Generation},
   author={Chang, Chen-Chia and others},
-  booktitle={International Conference on Machine Learning},
-  year={2025}
+  booktitle={Proceedings of the 42st International Conference on Machine Learning},
+  year={2025},
+  organization =    {PMLR},
 }
 ```
 
