@@ -51,9 +51,7 @@ Target data is located at:
 
 * For LaMAGIC2 SOTA experiments, use:
 
-  * `LaMAGIC2/SFCI_3comp.json`
-  * `LaMAGIC2/SFCI_4comp.json`
-  * `LaMAGIC2/SFCI_5comp.json`
+  * `LaMAGIC2/SFCI_345comp.json`
   * `LaMAGIC2/SFCI_6comp.json`
 
 ---
