@@ -1,73 +1,137 @@
-# LaMAGIC and LaMAGIC2 at ICML 24, 25: Language-Model-based Topology Generation for Analog Integrated Circuits
+# LaMAGIC and LaMAGIC2: Language-Model-based Topology Generation for Analog Integrated Circuits
 
+### Published at ICML 2024 & ICML 2025
 
-## Package
+This repository provides the official implementation of LaMAGIC and LaMAGIC2, two approaches leveraging Language Models (LMs) for automated topology generation of analog integrated circuits.
 
-[//]: # (The used package can be found in `package-list.txt`. You can use it to create a Conda environment.)
+* **LaMAGIC** ([ICML'24 Paper](https://arxiv.org/pdf/2407.18269))
+* **LaMAGIC2** ([ICML'25 Paper](https://arxiv.org/abs/2506.10235))
 
-Run the following command to create the environment:
-   ```bash
-   conda env create -f environment.yml
+---
+
+## Installation
+
+### Environment Setup
+
+First, create a Conda environment using:
+
+```bash
+conda env create -f environment.yml
 ```
 
-After cloning, use git lfs pull to clone all large dataset files.
+### Git LFS for Large Files
 
-## Framework
+After cloning the repository, fetch large dataset files using:
 
-This is the work for Analog topology generation. 
-Article: LaMAGIC at ICML'24 `https://arxiv.org/pdf/2407.18269`
-LaMAGIC2 at ICML'25 `https://arxiv.org/abs/2506.10235`
+```bash
+git lfs pull
+```
 
-## Setup
+---
 
-After installing the package, download the model of flan-T5-base at `https://huggingface.co/google/flan-t5-base`.
-This is the base model we use for finetuning.
-Then, for all the yml files under directory `analog_LLM/configs`, change the base_model into your model save path.
+## Dataset and Model Setup
 
-The dataset is in `https://huggingface.co/datasets/turtleben/LaMAGIC-dataset`. You should clone this dataset first. Then, the target data is located in `[your_save_path]/LaMAGIC-dataset/transformed`. The SOTA model version is using data `LaMAGIC2/SFCI_(345 or 6)comp.json`.
+### Base Model
 
-## Run
+Download the pretrained `flan-T5-base` model from [Hugging Face](https://huggingface.co/google/flan-t5-base). Update the model path in all YAML configuration files located in:
 
-The finetuning code is located in directory `experiment`. 
+```
+analog_LLM/configs
+```
 
-### For LaMAGIC paper:
+### Dataset
 
-#### Train on 3, 4, 5-component circuits
-1. 
-```bash 
+Clone the dataset from [LaMAGIC-dataset](https://huggingface.co/datasets/turtleben/LaMAGIC-dataset).
+
+Target data is located at:
+
+```
+[your_save_path]/LaMAGIC-dataset/transformed
+```
+
+* For LaMAGIC2 SOTA experiments, use:
+
+  * `LaMAGIC2/SFCI_3comp.json`
+  * `LaMAGIC2/SFCI_4comp.json`
+  * `LaMAGIC2/SFCI_5comp.json`
+  * `LaMAGIC2/SFCI_6comp.json`
+
+---
+
+## Training
+
+Training scripts are organized by each paper under the `experiment` directory.
+
+### LaMAGIC (ICML'24)
+
+#### Initial training on 3, 4, and 5-component circuits:
+
+* **Naïve (NF), Canonical (CF), Canonical + Duty Cycle (CFDC)**:
+
+```bash
 python experiment/lamagic1/trn_LLM_instruction.py
-``` 
-This is for Naïve formulation (NF), Canonical formulation (CF), and Canonical formulation + new duty cycle representation (CFDC)
+```
 
-2. 
-```bash 
+* **Pure-text adjacency-matrix (PM)**:
+
+```bash
 python experiment/lamagic1/trn_LLM_pure_text_matrix_form.py
-``` 
-This is for pure-text adjacency-matrix-based formulation (PM).
+```
 
-3. 
+* **Float-input adjacency-matrix (FM)** *(core contribution)*:
+
 ```bash
 python experiment/lamagic1/trn_LLM_float_input_matrix_form.py
 ```
-This is for float-input adjacency-matrix-based formulation (FM). This is the core contribution in LaMAGIC.
 
-#### Then finetune on 6-component circuit with only 500, 1000, 2000 data points
-1.
+#### Fine-tuning on 6-component circuits (limited data: 500, 1000, 2000 samples):
+
 ```bash
 python experiment/lamagic1/trn_LLM_6_comp.py
 ```
-This is for finetuning 6-component circuit on CF, PM, and FM.
 
-### For LaMAGIC2 paper:
+---
 
-#### Train on 3, 4, 5-component circuits
+### LaMAGIC2 (ICML'25)
+
+#### Initial training on 3, 4, and 5-component circuits:
+
+* **Succinct Float-input Matrix (SFM), Succinct Float-input Canonical with Identifier (SFCI)** *(core contribution)*:
+
 ```bash
 python experiment/lamagic2/trn_pure_tranformer.py
 ```
-This contains Succinct float-input adjacency-matrix-based formulation (SFM) and Succinct float-input canonical formulation with identifier (SFCI). SFCI is the core contribution of LaMAGIC2.
 
-#### Finetune on 6-component circuits with only 500, 1000, and 2000 data points
+#### Fine-tuning on 6-component circuits (limited data: 500, 1000, 2000 samples):
+
 ```bash
 python experiment/lamagic2/trn_pure_tranformer_6comp.py
 ```
-This also contains SFM and SFCI.
+
+---
+
+## Citation
+
+If you use this work in your research, please cite our papers:
+
+```bibtex
+@inproceedings{chang2024lamagic,
+  title={LaMAGIC: Language-Model-based Automated Generation of Integrated Circuits},
+  author={Chang, Chen-Chia and others},
+  booktitle={International Conference on Machine Learning},
+  year={2024}
+}
+
+@inproceedings{chang2025lamagic2,
+  title={LaMAGIC2: Enhanced Language-Model-based Topology Generation for Analog Circuits},
+  author={Chang, Chen-Chia and others},
+  booktitle={International Conference on Machine Learning},
+  year={2025}
+}
+```
+
+---
+
+## Contact
+
+For questions or further collaboration, please reach out to the authors.
