@@ -103,12 +103,12 @@ python experiment/lamagic2/trn_pure_tranformer_6comp.py
 * **3, 4, 5-component circuits (SFM):**
 
   1. Trained on SFM with data augmentation (vertex random shuffle): [LaMAGIC2-345comp-SFM-dataaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFM-dataaug)
-  2. After data augment, trained on SFM without data augmentation: [LaMAGIC2-345comp-SFM-noaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFM-noaug)
+  2. After data augment, trained on SFM without data augmentation: [LaMAGIC2-345comp-SFM-dataaug-noaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFM-dataaug-noaug)
 
 * **3, 4, 5-component circuits (SFCI):**
 
   1. Trained on SFCI with data augmentation (vertex random shuffle): [LaMAGIC2-345comp-SFCI-dataaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFCI-dataaug)
-  2. After data augment, trained on SFCI without data augmentation: [LaMAGIC2-345comp-SFCI-noaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFCI-noaug)
+  2. After data augment, trained on SFCI without data augmentation: [LaMAGIC2-345comp-SFCI-dataaug-noaug](https://huggingface.co/turtleben/LaMAGIC2-345comp-SFCI-dataaug-noaug)
 
 * **6-component circuits (SFM):**
 
