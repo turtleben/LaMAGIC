@@ -16,6 +16,17 @@ from analog_LLM.utils.data_collator import DataCollatorForT5MLM
 def tokenized(config):
     """Tokenize our text dataset and save"""
     config.tokenized = False
+    def find_placeholders(cfg):
+        return {
+            name: val
+            for name, val in vars(cfg).items()
+            if isinstance(val, str) and val.startswith("[YOUR_")
+        }
+    placeholders = find_placeholders(config)
+    if placeholders:
+        for name, val in placeholders.items():
+            print(f"Please set the value for {name} (currently {val})")
+            raise ValueError(f"Please set the value for {name} (currently {val})")
     LLM_builder = AnalogLLMBuilder(config)
 
 
@@ -171,6 +182,7 @@ def plot_threshold_hist_generation():
     plt.savefig("plot/vout_data345new-noisormorphic-connection-dataaug-noaug-epoch30.png", dpi=200)
 
 if __name__ == "__main__":
-    # run()
+
     trn_edgeGen_vertex_permutation()
     trn_edgeGen_vertex_permutation_then_no_permute()
+    trn_edgeGen_then_topologyGen()

@@ -19,14 +19,6 @@ First, create a Conda environment using:
 conda env create -f environment.yml
 ```
 
-### Git LFS for Large Files
-
-After cloning the repository, fetch large dataset files using:
-
-```bash
-git lfs pull
-```
-
 ---
 
 ## Dataset and Model Setup

@@ -15,6 +15,17 @@ from analog_LLM.analog_LLM import AnalogLLMBuilder
 def tokenized(config):
     """Tokenize our text dataset and save"""
     config.tokenized = False
+    def find_placeholders(cfg):
+        return {
+            name: val
+            for name, val in vars(cfg).items()
+            if isinstance(val, str) and val.startswith("[YOUR_")
+        }
+    placeholders = find_placeholders(config)
+    if placeholders:
+        for name, val in placeholders.items():
+            print(f"Please set the value for {name} (currently {val})")
+            raise ValueError(f"Please set the value for {name} (currently {val})")
     LLM_builder = AnalogLLMBuilder(config)
     exit()
 
