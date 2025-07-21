@@ -11,11 +11,21 @@ import copy
 
 from utils.yaml_parser import load_and_apply_yaml_config
 from analog_LLM.analog_LLM import AnalogLLMBuilder
-from analog_LLM.utils.data_collator import DataCollatorForT5MLM
 
 def tokenized(config):
     """Tokenize our text dataset and save"""
     config.tokenized = False
+    def find_placeholders(cfg):
+        return {
+            name: val
+            for name, val in vars(cfg).items()
+            if isinstance(val, str) and val.startswith("[YOUR_")
+        }
+    placeholders = find_placeholders(config)
+    if placeholders:
+        for name, val in placeholders.items():
+            print(f"Please set the value for {name} (currently {val})")
+            raise ValueError(f"Please set the value for {name} (currently {val})")
     LLM_builder = AnalogLLMBuilder(config)
 
 
@@ -48,15 +58,15 @@ def trn_PM_6_comp(need_tokenized=False, data_num=500):
     if data_num == 500:
         config.trn_data_num = 500
         config.wandb_run_name = 'flanT5-maskedgen-nofloatembed-data6-aug-from-connection-dataaug-noaug-epoch120-dnum500'
-        config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/analog_LLM_model_flanT5/' + config.wandb_run_name
+        config.output_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
     elif data_num == 1000:
         config.trn_data_num = 1000
         config.wandb_run_name = 'flanT5-maskedgen-nofloatembed-data6-aug-from-connection-dataaug-noaug-epoch120-dnum1000'
-        config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/analog_LLM_model_flanT5/' + config.wandb_run_name
+        config.output_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
     elif data_num == 2000:
         config.trn_data_num = 2000
         config.wandb_run_name = 'flanT5-maskedgen-nofloatembed-data6-aug-from-connection-dataaug-noaug-epoch120-dnum2000'
-        config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/analog_LLM_model_flanT5/' + config.wandb_run_name
+        config.output_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
 
     if need_tokenized:
         tokenized(config)

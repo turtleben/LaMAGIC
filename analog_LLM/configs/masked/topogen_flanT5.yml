@@ -1,13 +1,13 @@
 
 # This save path need to be changed to your own path
 # BEGIN
-text_data_dir: "[YOUR_DATASET_SAVE_PATH]/transformed/LaMAGIC"
+text_data_dir: "[YOUR_DATA_SAVE_DIR]/transformed/LaMAGIC"
 target_data: "matrix_form_345comp.json"
-tokenized_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked/tokenized"
-tokenized_data_trn: "dataset_all_345_regenerate_prune_isomophic_new_trn.pickle"
-tokenized_data_val: "dataset_all_345_regenerate_prune_isomophic_new_val.pickle"
-base_model: "[YOUR_MODEL_SAVE_PATH]]/flan-t5-base"
 LUT_cir_data_name: "matrix_form_345comp.json"
+tokenized_data_dir: "[YOUR_DATA_SAVE_DIR]/transformed/LaMAGIC/tokenized"
+tokenized_data_trn: "matrix_form_345comp_trn.pickle"
+tokenized_data_val: "matrix_form_345comp_val.pickle"
+base_model: "[YOUR_MODEL_SAVE_DIR]/flan-t5-base"
 # END
 
 order: 'duty vertex edge'

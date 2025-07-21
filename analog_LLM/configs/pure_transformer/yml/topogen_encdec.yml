@@ -1,15 +1,14 @@
 
-# text_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked"
-# target_data: "dataset_5_valid_set_regenerate_prune_isomophic.json"
-text_data_dir: '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/dataset20220523/pure_transformer'
-target_data: 'dataset_all_345_regenerate_prune_isomophic_shrink_canonical_dutycycle_first.json'
-LUT_cir_data_name: "dataset_all_345_regenerate_prune_isomophic_new_LUT_for_eval.json"
-tokenized_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/node2topo/tokenized_encdec"
-tokenized_data_trn: "dataset_345_shrink_canonical_dutycycle_first_trn.pickle"
-tokenized_data_val: "dataset_345_shrink_canonical_dutycycle_first_val.pickle"
-
-order: 'duty vertex edge'
-# not used now for masked modeling
+# This save path need to be changed to your own path
+# BEGIN
+text_data_dir: '[YOUR_DATA_SAVE_DIR]/transformed/LaMAGIC2'
+target_data: 'SFCI_345comp.json'
+LUT_cir_data_name: "SFCI_345comp.json"
+tokenized_data_dir: "[YOUR_DATA_SAVE_DIR]/transformed/LaMAGIC2/tokenized"
+tokenized_data_trn: "SFCI_345comp_trn.pickle"
+tokenized_data_val: "SFCI_345comp_val.pickle"
+base_model: "[YOUR_MODEL_SAVE_DIR]/flan-t5-base"
+# END
 
 task: 'conditionalGen'
 order: 'duty vertex edge'
@@ -29,9 +28,6 @@ d_model: 32
 vocab_size: 43
 duty10: False
 
-base_model: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/flan-t5-base"
-# output_dir: "/skunk-pod-storage-chenchia-2echang-40ibm-2ecom-pvc/analog_LLM_model/v1-torchrun-nproc2-data5-10k-instruction"
-# running in ssh -p 2502 skunk@50.22.159.227
 output_dir: "/"
 val_set_size: 0.1
 

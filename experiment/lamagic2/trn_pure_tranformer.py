@@ -19,14 +19,25 @@ from analog_LLM.utils.tokenizer import CustomTokenizer
 def tokenized(config):
     """Tokenize our text dataset and save"""
     config.tokenized = False
+    def find_placeholders(cfg):
+        return {
+            name: val
+            for name, val in vars(cfg).items()
+            if isinstance(val, str) and val.startswith("[YOUR_")
+        }
+    placeholders = find_placeholders(config)
+    if placeholders:
+        for name, val in placeholders.items():
+            print(f"Please set the value for {name} (currently {val})")
+            raise ValueError(f"Please set the value for {name} (currently {val})")
     LLM_builder = AnalogTransformerBuilder(config)
 
 def run_SFM_T5tokenizer_dataaug(need_to_tokenize=False):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
-    config.target_data = 'dataset_all_345_matrix_dutycycle_first.json'
-    config.tokenized_data_trn = "dataset_345_matrix_dutycycle_first_tokenizerflant5_trn.pickle"
-    config.tokenized_data_val = "dataset_345_matrix_dutycycle_first_tokenizerflant5_val.pickle"
+    config.target_data = 'SFM_345comp.json'
+    config.tokenized_data_trn = "SFM_345comp_trn.pickle"
+    config.tokenized_data_val = "SFM_345comp_val.pickle"
     config.vocab_file = 'analog_LLM/configs/pure_transformer/dict/matrix_dutyfirst.json'
     config.tokenized = True
     config.masked_method = 'full-connection' 
@@ -52,10 +63,9 @@ def run_SFM_T5tokenizer_dataaug(need_to_tokenize=False):
     config.eval_steps = 400
 
     config.data_augment = True
-    # upload LaMAGIC2-345comp-SFM-dataaug
     # https://huggingface.co/turtleben/LaMAGIC2-345comp-SFM-dataaug/tree/main
-    config.wandb_run_name = 'matrix-loadT5andTokenizer-data345new-connection-aug-epoch120'
-    config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
+    config.wandb_run_name = 'LaMAGIC2-345Comp-SFM-dataaug'
+    config.output_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
 
     # If it is the first time running, run the following line to create and save the tokenized dataset
     if need_to_tokenize == True:
@@ -69,9 +79,9 @@ def run_SFM_T5tokenizer_dataaug(need_to_tokenize=False):
 def run_SFM_T5tokenizer_noaug(need_to_tokenize=False):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
-    config.target_data = 'dataset_all_345_matrix_dutycycle_first.json'
-    config.tokenized_data_trn = "dataset_345_matrix_dutycycle_first_tokenizerflant5_trn.pickle"
-    config.tokenized_data_val = "dataset_345_matrix_dutycycle_first_tokenizerflant5_val.pickle"
+    config.target_data = 'SFM_345comp.json'
+    config.tokenized_data_trn = "SFM_345comp_trn.pickle"
+    config.tokenized_data_val = "SFM_345comp_val.pickle"
     config.vocab_file = 'analog_LLM/configs/pure_transformer/dict/matrix_dutyfirst.json'
     config.tokenized = True
     config.masked_method = 'full-connection' 
@@ -96,13 +106,13 @@ def run_SFM_T5tokenizer_noaug(need_to_tokenize=False):
     config.num_epochs = 120
     config.eval_steps = 400
 
-    config.wandb_run_name = 'matrix-loadT5andTokenizer-data345new-connection-aug-epoch120'
-    config.our_model_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
+    config.wandb_run_name = 'LaMAGIC2-345Comp-SFM-dataaug'
+    config.our_model_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
     config.data_augment = False
     config.finetune_from_ours = True
     # upload LaMAGIC2-345comp-SFM-dataaug-noaug
-    config.wandb_run_name = 'matrix-loadT5andTokenizer-data345new-connection-aug-noaug-epoch120'
-    config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
+    config.wandb_run_name = 'LaMAGIC2-345Comp-SFM-dataaug-noaug'
+    config.output_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
 
     LLM_builder = AnalogTransformerBuilder(config)
     LLM_builder.train() # train LLM
@@ -111,10 +121,10 @@ def run_SFM_T5tokenizer_noaug(need_to_tokenize=False):
 def run_SFCI_T5tokenizer_dataaug(need_to_tokenize=False):
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
-    config.target_data = 'dataset_345_shrink_canonical_typeNidx_dutycycle_first.json'
+    config.target_data = 'SFCI_345comp.json'
     config.vocab_file = 'analog_LLM/configs/pure_transformer/dict/canonical_typeNidx_duty10first.json'
-    config.tokenized_data_trn = "dataset_345_shrink_canonical_typeNidx_dutycycle_first_tokenizerflant5_trn.pickle"
-    config.tokenized_data_val = "dataset_345_shrink_canonical_typeNidx_dutycycle_first_tokenizerflant5_val.pickle"
+    config.tokenized_data_trn = "SFCI_345comp_trn.pickle"
+    config.tokenized_data_val = "SFCI_345comp_val.pickle"
     config.use_duty_cycle_option_prefix = True
     config.typeNidx = True
     config.tokenized = True
@@ -143,8 +153,8 @@ def run_SFCI_T5tokenizer_dataaug(need_to_tokenize=False):
     config.random_causal = False
     config.dropout_rate = 0.15
     # upload LaMAGIC2-345comp-SFCI-dataaug
-    config.wandb_run_name = 'shrink_canonical_typeNidx_loadT5andTokenizer_useduty-data345new-connection-aug-epoch120'
-    config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
+    config.wandb_run_name = 'LaMAGIC2-345Comp-SFCI-dataaug'
+    config.output_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
 
     # If it is the first time running, run the following line to create and save the tokenized dataset
     if need_to_tokenize == True:
@@ -158,10 +168,10 @@ def run_SFCI_T5tokenizer_dataaug(need_to_tokenize=False):
 def run_SFCI_T5tokenizer_noaug():
     config_path = 'analog_LLM/configs/pure_transformer/yml/topogen_encdec.yml'
     config = load_and_apply_yaml_config(config_path)
-    config.target_data = 'dataset_345_shrink_canonical_typeNidx_dutycycle_first.json'
+    config.target_data = 'SFCI_345comp.json'
     config.vocab_file = 'analog_LLM/configs/pure_transformer/dict/canonical_typeNidx_duty10first.json'
-    config.tokenized_data_trn = "dataset_345_shrink_canonical_typeNidx_dutycycle_first_tokenizerflant5_trn.pickle"
-    config.tokenized_data_val = "dataset_345_shrink_canonical_typeNidx_dutycycle_first_tokenizerflant5_val.pickle"
+    config.tokenized_data_trn = "SFCI_345comp_trn.pickle"
+    config.tokenized_data_val = "SFCI_345comp_val.pickle"
     config.use_duty_cycle_option_prefix = True
     config.typeNidx = True
     config.tokenized = True
@@ -187,14 +197,14 @@ def run_SFCI_T5tokenizer_noaug():
     config.load_pretrained = False
     config.use_duty_cycle_option_prefix = True
     config.random_causal = False
-    config.wandb_run_name = 'shrink_canonical_typeNidx_loadT5andTokenizer_useduty-data345new-connection-aug-epoch120'
-    config.our_model_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
+    config.wandb_run_name = 'LaMAGIC2-345Comp-SFCI-dataaug'
+    config.our_model_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
     config.data_augment = False
     config.dropout_rate = 0.1
     config.finetune_from_ours = True
     # upload LaMAGIC2-345Comp-SFCI-dataaug-noaug
-    config.wandb_run_name = 'shrink_canonical_typeNidx_loadT5andTokenizer_useduty-data345new-connection-aug-noaug-epoch120'
-    config.output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + config.wandb_run_name
+    config.wandb_run_name = 'LaMAGIC2-345Comp-SFCI-dataaug-noaug'
+    config.output_dir = '[YOUR_MODEL_SAVE_DIR]/' + config.wandb_run_name
 
     LLM_builder = AnalogTransformerBuilder(config)
     LLM_builder.train() # train LLM
@@ -207,10 +217,10 @@ def plot_threshold_hist_generation():
         threshold_str.append(str(num))
 
     wandb_run_name = 'matrix-loadT5andTokenizer-data345new-connection-aug-noaug-epoch120'
-    output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + wandb_run_name
+    output_dir = '[YOUR_MODEL_SAVE_DIR]/' + wandb_run_name
 
     # wandb_run_name = 'shrink_canonical_typeNidx_loadT5andTokenizer_useduty-data345new-connection-aug-noaug-epoch120'
-    # output_dir = '/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/encoder_decoder/' + wandb_run_name
+    # output_dir = '[YOUR_MODEL_SAVE_DIR]/' + wandb_run_name
 
 
     data_generated = json.load(open(os.path.join(output_dir, 'data_generated.json'), 'r'))
