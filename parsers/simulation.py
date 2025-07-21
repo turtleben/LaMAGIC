@@ -22,8 +22,6 @@ from parsers.util import *
 # sys.path.append(os.path.join(sys.path[0], '../topo_data_util/'))
 # from train import main as train_fn
 from topo_data_util.topo_analysis.topoGraph import TopoGraph
-from parsers.GetReward import calculate_reward
-from topo_data_util.topo_utils.plot import plot_hist
 from utils.yaml_parser import load_and_apply_yaml_config
 
 simulate_param = {"Duty_Cycle":[0.1, 0.3, 0.5, 0.7, 0.9],
