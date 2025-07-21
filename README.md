@@ -25,10 +25,11 @@ This is the base model we use for finetuning.
 Then, for all the yml files under directory `analog_LLM/configs`, change the base_model into your model save path.
 
 The dataset is in `https://huggingface.co/datasets/turtleben/LaMAGIC-dataset`. You should clone this dataset first. Then, the target data is located in `[your_save_path]/LaMAGIC-dataset/transformed`. The SOTA model version is using data `LaMAGIC2/SFCI_(345 or 6)comp.json`.
+Then, for all the yml files under directory `analog_LLM/configs`, change the text_data_dir into your dataset save directory.
 
 ## Run
 
-The finetuning code is located in directory `experiment`. 
+The finetuning code is located in directory `experiment`. Note: Inside each function, we change some of the params from the yaml file locally.
 
 ### For LaMAGIC paper:
 

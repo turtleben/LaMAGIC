@@ -1,13 +1,13 @@
 
 # This save path need to be changed to your own path
 # BEGIN
-text_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked"
-target_data: "dataset_all_345_regenerate_prune_isomophic_new.json"
-LUT_cir_data_name: "dataset_all_345_regenerate_prune_isomophic_new_LUT_for_eval.json"
+text_data_dir: "[YOUR_DATASET_SAVE_PATH]/transformed/LaMAGIC"
+target_data: "matrix_form_345comp.json"
 tokenized_data_dir: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked/tokenized"
 tokenized_data_trn: "dataset_all_345_regenerate_prune_isomophic_new_trn.pickle"
 tokenized_data_val: "dataset_all_345_regenerate_prune_isomophic_new_val.pickle"
-base_model: "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/LLM_models/flan-t5-base"
+base_model: "[YOUR_MODEL_SAVE_PATH]]/flan-t5-base"
+LUT_cir_data_name: "matrix_form_345comp.json"
 # END
 
 order: 'duty vertex edge'
@@ -24,8 +24,6 @@ warmup_steps: 300
 val_custom: False
 data_augment: False
 
-# output_dir: "/skunk-pod-storage-chenchia-2echang-40ibm-2ecom-pvc/analog_LLM_model/v1-torchrun-nproc2-data5-10k-instruction"
-# running in ssh -p 2502 skunk@50.22.159.227
 output_dir: "/"
 val_set_size: 0.1
 
