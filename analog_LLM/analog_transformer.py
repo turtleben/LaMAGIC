@@ -224,14 +224,18 @@ class AnalogTransformerBuilder():
     def val(self, get_mse=False, sim=False, comp6=False):
         text_data_dir = self.params.text_data_dir
         if not self.params.duty10:
-            self.params.text_data_dir = "/skunk-pod-storage-chenchia-2echang-40duke-2eedu-pvc/dataset_power_converter/text_dataset/masked"
-            self.params.target_data = "dataset_all_345_regenerate_prune_isomophic_new.json"
+            assert False, "change self.params.text_data_dir and target_data into your local path for json https://huggingface.co/datasets/turtleben/LaMAGIC-dataset/blob/main/transformed/LaMAGIC/matrix_form_345comp.json"
+            print("after changing, comment assertion")
+            self.params.text_data_dir = "[Your local path]"
+            self.params.target_data = "matrix_form_345comp.json"
         else:
-            self.params.target_data = "dataset_345_10duty_matrix_dutycycle_first.json"
+            assert False, "not implemented for duty10"
+            # self.params.target_data = "dataset_345_10duty_matrix_dutycycle_first.json"
         d_path = os.path.join(self.params.text_data_dir, self.params.target_data)
         if comp6:
-            # d_path = os.path.join(self.params.text_data_dir, self.params.LUT_cir_data_name)
-            d_path = os.path.join(self.params.text_data_dir , "dataset_6_regenerate.json")
+            assert False, "make sure you change self.params.text_data_dir in line 229 into your local path for json https://huggingface.co/datasets/turtleben/LaMAGIC-dataset/blob/main/transformed/LaMAGIC/matrix_form_6comp.json"
+            print("after changing, comment assertion")
+            d_path = os.path.join(self.params.text_data_dir , "matrix_form_6comp.json")
             self.params.text_data_dir = text_data_dir
         print('d_path', d_path)
         cir_data = json.load(open(d_path, 'r'))
